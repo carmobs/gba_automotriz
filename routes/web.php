@@ -18,3 +18,15 @@ Route::get("/catalogos/vehiculos", [CatalogosController::class, 'vehiculosGet'])
 Route::get("/catalogos/reparacion", [CatalogosController::class, 'reparacionGet']);
 
 Route::get("/catalogos/pagos", [CatalogosController::class, 'pagosGet']);
+
+Route::get("/catalogos/clientes/agregar", [CatalogosController::class, 'clientesAgregarGet']);
+
+Route::post("/catalogos/clientes/agregar", [CatalogosController::class, 'clientesAgregarPost']);
+
+Route::get("/catalogos/empleados/agregar", [CatalogosController::class, 'empleadosAgregarGet']);
+
+Route::post("/catalogos/empleados/agregar", [CatalogosController::class, 'empleadosAgregarPost']);
+
+Route::get("/catalogos/servicios/agregar", [CatalogosController::class, 'serviciosAgregarGet']);
+
+Route::post("/catalogos/servicios/agregar", [CatalogosController::class, 'serviciosAgregarPost']);
