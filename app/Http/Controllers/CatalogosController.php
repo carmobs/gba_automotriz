@@ -150,6 +150,67 @@ class CatalogosController extends Controller
             ]
         ]);
     }
+    public function vehiculosAgregarGet(): View
+    {
+        // Obtener todos los clientes para el dropdown
+        $clientes = Clientes::all(); // Asegúrate de importar el modelo Cliente al inicio del archivo
+        
+        return view('catalogos/vehiculosAgregarGet', [
+            "breadcrumbs" => [
+                "inicio" => url("/"),
+                "vehiculos" => url("/catalogos/vehiculos"),
+                "Agregar" => url("/catalogos/vehiculos/agregar")
+            ],
+            "clientes" => $clientes // Pasar los clientes a la vista
+        ]);
+    }
+    
+    public function vehiculosAgregarPost(Request $request): RedirectResponse
+    {
+        // Debug inicial (eliminar después de verificar)
+        logger()->debug('Datos recibidos:', $request->all());
+        
+        // Validación modificada
+        $validated = $request->validate([
+            'id_clientes' => 'required|exists:clientes,id_clientes',
+            'marca' => 'required|string|max:50',
+            'modelo' => 'required|string|max:50',
+            'anio_field' => 'required|integer|min:1900|max:'.(date('Y')+2),
+            'detalles_vehiculo' => 'nullable|string|max:100'
+        ]);
+    
+        // Conversión explícita
+        $anioValue = (int)$validated['anio_field'];
+    
+        try {
+            // Opción 1: Usando Eloquent
+            $vehiculo = new Vehiculos();
+            $vehiculo->id_clientes = $validated['id_clientes'];
+            $vehiculo->marca = strtoupper($validated['marca']);
+            $vehiculo->modelo = strtoupper($validated['modelo']);
+            $vehiculo->año = $anioValue; // Nombre exacto de la columna
+            $vehiculo->detalles_vehiculo = $validated['detalles_vehiculo'];
+            
+            if($vehiculo->save()) {
+                return redirect('/catalogos/vehiculos')->with('success', 'Vehículo guardado');
+            }
+    
+            // Opción 2: Usando Query Builder (si falla Eloquent)
+            DB::table('vehiculos')->insert([
+                'id_clientes' => $validated['id_clientes'],
+                'marca' => strtoupper($validated['marca']),
+                'modelo' => strtoupper($validated['modelo']),
+                'año' => $anioValue,
+                'detalles_vehiculo' => $validated['detalles_vehiculo']
+            ]);
+    
+            return redirect('/catalogos/vehiculos')->with('success', 'Vehículo guardado');
+    
+        } catch (\Exception $e) {
+            logger()->error('Error al guardar vehículo: '.$e->getMessage());
+            return back()->with('error', 'Error al guardar: '.$e->getMessage())->withInput();
+        }
+    }
 
     public function reparacionGet(): View
     {

@@ -30,3 +30,7 @@ Route::post("/catalogos/empleados/agregar", [CatalogosController::class, 'emplea
 Route::get("/catalogos/servicios/agregar", [CatalogosController::class, 'serviciosAgregarGet']);
 
 Route::post("/catalogos/servicios/agregar", [CatalogosController::class, 'serviciosAgregarPost']);
+
+Route::get("/catalogos/vehiculos/agregar", [CatalogosController::class, 'vehiculosAgregarGet']);
+
+Route::post("/catalogos/vehiculos/agregar", [CatalogosController::class, 'vehiculosAgregarPost']);
