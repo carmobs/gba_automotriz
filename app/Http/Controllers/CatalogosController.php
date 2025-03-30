@@ -251,5 +251,41 @@ class CatalogosController extends Controller
             ]
         ]);
     }
+    public function pagosAgregarGet(): View
+    {
+        $reparaciones = Reparacion::all();
+        
+        return view('catalogos/pagosAgregarGet', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Pagos' => url('/catalogos/pagos'),
+                'Agregar Pago' => url('/catalogos/pagos/agregar')
+            ],
+            'reparaciones' => $reparaciones
+        ]);
+    }
+
+    // Procesar el formulario
+    public function pagosAgregarPost(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_reparacion' => 'required|exists:reparacion,id_reparacion',
+            'fecha' => 'required|date',
+            'monto' => 'required|numeric|min:0|decimal:0,2'
+        ]);
+
+        try {
+            Pagos::create([
+                'id_reparacion' => $validated['id_reparacion'],
+                'fecha' => $validated['fecha'],
+                'monto' => $validated['monto']
+            ]);
+
+            return redirect('/catalogos/pagos')->with('success', 'Pago registrado correctamente');
+            
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error al registrar pago: '.$e->getMessage());
+        }
+    }
 
 }

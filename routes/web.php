@@ -34,3 +34,6 @@ Route::post("/catalogos/servicios/agregar", [CatalogosController::class, 'servic
 Route::get("/catalogos/vehiculos/agregar", [CatalogosController::class, 'vehiculosAgregarGet']);
 
 Route::post("/catalogos/vehiculos/agregar", [CatalogosController::class, 'vehiculosAgregarPost']);
+
+Route::get('/catalogos/pagos/agregar', [CatalogosController::class, 'pagosAgregarGet'])->name('pagos.create');
+Route::post('/catalogos/pagos/agregar', [CatalogosController::class, 'pagosAgregarPost'])->name('pagos.store');
