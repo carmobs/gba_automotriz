@@ -232,6 +232,67 @@ class CatalogosController extends Controller
         ]);
     }
 
+    public function reparacionAgregarGet(): View
+    {
+        $clientes = Clientes::all();
+        $empleados = Empleados::all();
+        
+        return view('catalogos/reparacionAgregarGet', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reparaciones' => url('/catalogos/reparacion'),
+                'Agregar Reparación' => url('/catalogos/reparacion/agregar')
+            ],
+            'clientes' => $clientes,
+            'empleados' => $empleados
+        ]);
+    }
+
+    // Procesar el formulario
+// app/Http/Controllers/ReparacionController.php
+public function reparacionAgregarPost(Request $request): RedirectResponse
+{
+    // Validación reforzada
+    $validated = $request->validate([
+        'id_clientes' => [
+            'required',
+            'integer',
+            'exists:clientes,id_clientes'
+        ],
+        'id_empleados' => [
+            'required',
+            'integer',
+            'exists:empleados,id_empleados'
+        ],
+        'fecha_reparacion' => 'required|date|before_or_equal:today',
+        'estado' => 'required|in:En proceso,Completada,Cancelada'
+    ]);
+
+    // Debug: Verificar datos recibidos
+    logger()->debug('Datos antes de guardar:', $validated);
+
+    try {
+        $reparacion = new Reparacion();
+        $reparacion->id_clientes = (int)$validated['id_clientes'];
+        $reparacion->id_empleados = (int)$validated['id_empleados'];
+        $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
+        $reparacion->estado = $validated['estado'];
+        $reparacion->save();
+        
+
+        return redirect('/catalogos/reparacion')->with([
+            'success' => 'Reparación registrada!',
+            'reparacion_id' => $reparacion->id_reparacion
+        ]);
+        
+    } catch (\Exception $e) {
+        logger()->error('Error al guardar: '.$e->getMessage());
+        return back()
+               ->withInput()
+               ->with('error', 'Error al guardar: '.$e->getMessage());
+    }
+}
+
     public function pagosGet(): View
     {
         $pagos = Pagos::join("reparacion", "reparacion.id_reparacion", "=", "pagos.id_reparacion")
