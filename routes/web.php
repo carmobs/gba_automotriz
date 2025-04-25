@@ -43,6 +43,8 @@ Route::get('/catalogos/reparacion/agregar', [CatalogosController::class, 'repara
 
 Route::post('/catalogos/reparacion/agregar', [CatalogosController::class, 'reparacionAgregarPost'])->name('reparacion.store');
 
+Route::get('/catalogos/orden_reparacion/ordenReparacionGet/{id_reparacion?}', [CatalogosController::class, 'ordenReparacionGet'])->name('orden_reparacion.get');
+
 Route::delete('/catalogos/clientes/{id}', [CatalogosController::class, 'clientesEliminar'])->name('clientes.destroy');
 
 Route::delete('/catalogos/servicios/{id}', [CatalogosController::class, 'serviciosEliminar'])->name('servicios.destroy');
@@ -54,3 +56,5 @@ Route::delete('/catalogos/vehiculos/{id}', [CatalogosController::class, 'vehicul
 Route::delete('/catalogos/reparacion/{id}', [CatalogosController::class, 'reparacionEliminar'])->name('reparacion.destroy');
 
 Route::delete('/catalogos/pagos/{id}', [CatalogosController::class, 'pagosEliminar'])->name('pagos.destroy');
+
+Route::delete('/catalogos/orden_reparacion/{id}', [CatalogosController::class, 'ordenReparacionEliminar'])->name('orden_reparacion.destroy');

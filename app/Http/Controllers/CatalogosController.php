@@ -13,6 +13,7 @@ use App\Models\Empleados;
 use App\Models\Vehiculos;
 use App\Models\Reparacion;
 use App\Models\Pagos;
+use App\Models\Orden_Reparacion;
 
 class CatalogosController extends Controller
 {
@@ -428,6 +429,30 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             return redirect()->route('pagos.get')->with('success', 'Pago eliminado correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar el pago: ' . $e->getMessage());
+        }
+    }
+
+    public function ordenReparacionGet($id_reparacion = null)
+    {
+        $breadcrumbs = [
+            'Inicio' => url('/'),
+            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet')
+        ];
+
+        $ordenes = Orden_Reparacion::where('id_reparacion', $id_reparacion)->get();
+
+        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes'));
+    }
+
+    public function ordenReparacionEliminar($id)
+    {
+        try {
+            $orden = Orden_Reparacion::findOrFail($id);
+            $orden->delete();
+
+            return redirect()->route('orden_reparacion.get')->with('success', 'Orden de reparación eliminada correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la orden de reparación: ' . $e->getMessage());
         }
     }
 
