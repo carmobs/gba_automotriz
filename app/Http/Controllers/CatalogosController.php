@@ -378,7 +378,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     }
     public function pagosAgregarGet(): View
     {
-        $reparaciones = Reparacion::all();
+        $clientes = Clientes::all();
         
         return view('catalogos/pagosAgregarGet', [
             'breadcrumbs' => [
@@ -386,7 +386,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
                 'Pagos' => url('/catalogos/pagos'),
                 'Agregar Pago' => url('/catalogos/pagos/agregar')
             ],
-            'reparaciones' => $reparaciones
+            'clientes' => $clientes
         ]);
     }
 
@@ -394,14 +394,20 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function pagosAgregarPost(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'id_reparacion' => 'required|exists:reparacion,id_reparacion',
+            'id_cliente' => 'required|exists:clientes,id_clientes',
             'fecha' => 'required|date',
             'monto' => 'required|numeric|min:0|decimal:0,2'
         ]);
 
         try {
+            $reparacion = Reparacion::where('id_clientes', $validated['id_cliente'])->first();
+
+            if (!$reparacion) {
+                return back()->withInput()->with('error', 'No se encontró una reparación asociada al cliente seleccionado.');
+            }
+
             Pagos::create([
-                'id_reparacion' => $validated['id_reparacion'],
+                'id_reparacion' => $reparacion->id_reparacion,
                 'fecha' => $validated['fecha'],
                 'monto' => $validated['monto']
             ]);
