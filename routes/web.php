@@ -45,6 +45,10 @@ Route::post('/catalogos/reparacion/agregar', [CatalogosController::class, 'repar
 
 Route::get('/catalogos/orden_reparacion/ordenReparacionGet/{id_reparacion?}', [CatalogosController::class, 'ordenReparacionGet'])->name('orden_reparacion.get');
 
+Route::get('/catalogos/orden_reparacion/agregar/{id_reparacion}', [CatalogosController::class, 'ordenReparacionAgregarGet'])->name('orden_reparacion.create');
+
+Route::post('/catalogos/orden_reparacion/agregar', [CatalogosController::class, 'ordenReparacionAgregarPost'])->name('orden_reparacion.store');
+
 Route::delete('/catalogos/clientes/{id}', [CatalogosController::class, 'clientesEliminar'])->name('clientes.destroy');
 
 Route::delete('/catalogos/servicios/{id}', [CatalogosController::class, 'serviciosEliminar'])->name('servicios.destroy');

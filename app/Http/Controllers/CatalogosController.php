@@ -444,6 +444,17 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes'));
     }
 
+    public function ordenReparacionAgregarGet()
+    {
+        $breadcrumbs = [
+            'Inicio' => url('/'),
+            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet'),
+            'Agregar Orden de Reparación' => url('/catalogos/orden_reparacion/agregar')
+        ];
+
+        return view('catalogos.ordenReparacionAgregarGet', compact('breadcrumbs'));
+    }
+
     public function ordenReparacionEliminar($id)
     {
         try {
@@ -453,6 +464,26 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             return redirect()->route('orden_reparacion.get')->with('success', 'Orden de reparación eliminada correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar la orden de reparación: ' . $e->getMessage());
+        }
+    }
+
+    public function ordenReparacionAgregarPost(Request $request)
+    {
+        $validated = $request->validate([
+            'id_reparacion' => 'required|exists:reparacion,id_reparacion',
+            'id_servicios' => 'required|exists:servicios,id_servicios',
+            'costo_unitario_servicio' => 'required|numeric|min:0',
+            'cantidad' => 'required|integer|min:1',
+            'estado' => 'required|in:1,0'
+        ]);
+
+        try {
+            Orden_Reparacion::create($validated);
+
+            return redirect()->route('orden_reparacion.get', ['id_reparacion' => $validated['id_reparacion']])
+                ->with('success', 'Orden de reparación agregada correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al agregar la orden de reparación: ' . $e->getMessage());
         }
     }
 
