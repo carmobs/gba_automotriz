@@ -10,12 +10,9 @@ class Empleados extends Model
     use HasFactory;
 
     protected $table = 'empleados';
-    protected $primaryKey = 'id_empleado';
+    protected $primaryKey = 'id_empleados'; // Corrected primary key
     public $incrementing = true;
     protected $keyType = 'int';
-    protected $nombre;
-    protected $fecha_ingreso;
-    protected $estado;
-    protected $fillable = ['id_empleado', 'nombre', 'fecha_ingreso', 'estado'];
+    protected $fillable = ['id_empleados', 'nombre', 'fecha_ingreso', 'estado']; // Corrected field name
     public $timestamps = false;
 }

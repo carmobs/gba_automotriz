@@ -33,7 +33,8 @@
         <td class="text-center">{{$servicio->costo}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{url('/catalogos/servicios/actualizar')}}">Actualizar</a>
-            <a class="btn btn-primary" href="{{url('/catalogos/servicios/eliminar')}}">Eliminar</a>
+            @component('components.delete-button', ['route' => 'servicios.destroy', 'id' => $servicio->id_servicios])
+            @endcomponent
         </td>
     </tr>
 @endforeach

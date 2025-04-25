@@ -55,6 +55,18 @@ class CatalogosController extends Controller
         return redirect('/catalogos/clientes');
     }
 
+    public function clientesEliminar($id)
+    {
+        try {
+            $cliente = Clientes::findOrFail($id);
+            $cliente->delete(); 
+
+            return redirect()->route('clientes.get')->with('success', 'Cliente eliminado correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar el cliente: ' . $e->getMessage());
+        }
+    }
+
     public function serviciosGet():View
     {
         $servicios = Servicios::all();
@@ -98,6 +110,17 @@ class CatalogosController extends Controller
         return redirect('/catalogos/servicios');
     }
 
+    public function serviciosEliminar($id): RedirectResponse
+    {
+        try {
+            $servicio = Servicios::findOrFail($id);
+            $servicio->delete();
+
+            return redirect()->route('servicios.get')->with('success', 'Servicio eliminado correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar el servicio: ' . $e->getMessage());
+        }
+    }
 
     public function empleadosGet():View
     {
@@ -134,6 +157,23 @@ class CatalogosController extends Controller
         $empleados->save();
     
         return redirect('/catalogos/empleados');
+    }
+
+    public function empleadosEliminar($id): RedirectResponse
+    {
+        try {
+            logger()->info("Attempting to delete empleado with ID: $id");
+
+            $empleado = Empleados::findOrFail($id);
+            $empleado->delete();
+
+            logger()->info("Empleado with ID: $id deleted successfully");
+
+            return redirect()->route('empleados.get')->with('success', 'Empleado eliminado correctamente');
+        } catch (\Exception $e) {
+            logger()->error("Error deleting empleado with ID: $id - " . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al eliminar el empleado: ' . $e->getMessage());
+        }
     }
 
     public function vehiculosGet():View
@@ -209,6 +249,18 @@ class CatalogosController extends Controller
         } catch (\Exception $e) {
             logger()->error('Error al guardar vehículo: '.$e->getMessage());
             return back()->with('error', 'Error al guardar: '.$e->getMessage())->withInput();
+        }
+    }
+
+    public function vehiculosEliminar($id): RedirectResponse
+    {
+        try {
+            $vehiculo = Vehiculos::findOrFail($id);
+            $vehiculo->delete();
+
+            return redirect()->route('vehiculos.get')->with('success', 'Vehículo eliminado correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar el vehículo: ' . $e->getMessage());
         }
     }
 
@@ -293,6 +345,18 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     }
 }
 
+    public function reparacionEliminar($id): RedirectResponse
+    {
+        try {
+            $reparacion = Reparacion::findOrFail($id);
+            $reparacion->delete();
+
+            return redirect()->route('reparacion.get')->with('success', 'Reparación eliminada correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la reparación: ' . $e->getMessage());
+        }
+    }
+
     public function pagosGet(): View
     {
         $pagos = Pagos::join("reparacion", "reparacion.id_reparacion", "=", "pagos.id_reparacion")
@@ -346,6 +410,18 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error al registrar pago: '.$e->getMessage());
+        }
+    }
+
+    public function pagosEliminar($id): RedirectResponse
+    {
+        try {
+            $pago = Pagos::findOrFail($id);
+            $pago->delete();
+
+            return redirect()->route('pagos.get')->with('success', 'Pago eliminado correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar el pago: ' . $e->getMessage());
         }
     }
 

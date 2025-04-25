@@ -33,7 +33,8 @@
         <td class="text-center">{{ $pago->monto }}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{ url('/catalogos/pagos/actualizar/') }}">Actualizar</a>
-            <a class="btn btn-primary" href="{{ url('/catalogos/pagos/eliminar/' )}}">Eliminar</a>
+            @component('components.delete-button', ['route' => 'pagos.destroy', 'id' => $pago->id_pagos])
+            @endcomponent
         </td>
     </tr>
 @endforeach

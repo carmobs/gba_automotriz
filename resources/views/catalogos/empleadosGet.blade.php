@@ -31,7 +31,8 @@
         <td class="text-center">{{$empleado->estado}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{url('/catalogos/empleados/actualizar')}}">Actualizar</a>
-            <a class="btn btn-primary" href="{{url('/catalogos/empleados/eliminar')}}">Eliminar</a>
+            @component('components.delete-button', ['route' => 'empleados.destroy', 'id' => $empleado->id_empleados])
+            @endcomponent
         </td>
     </tr>
 @endforeach

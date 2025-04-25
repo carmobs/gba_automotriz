@@ -8,7 +8,7 @@
         <h1>Clientes</h1>
     </div>
     <div class="col-auto titlebar-commands">
-        <a class = "btn btn-primary" href="{{url('/catalogos/clientes/agregar')}}">Agregar</a>
+        <a class="btn btn-primary" href="{{url('/catalogos/clientes/agregar')}}">Agregar</a>
     </div>
 </div>
 
@@ -29,7 +29,8 @@
         <td class="text-center">{{$cliente->telefono}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{url('/catalogos/clientes/actualizar')}}">Actualizar</a>
-            <a class="btn btn-primary" href="{{url('/catalogos/clientes/eliminar')}}">Eliminar</a>
+            @component('components.delete-button', ['route' => 'clientes.destroy', 'id' => $cliente->id_clientes])
+            @endcomponent
         </td>
     </tr>
 @endforeach

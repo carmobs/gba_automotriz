@@ -1,24 +1,42 @@
-.sidebar { 
+.sidebar {
     background-color: #fa3c3c;
-    height: 100%;
-    min-height: 100vh;
+    height: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: row; /* Alinear elementos horizontalmente */
+    align-items: center;
+    padding: 10px 0;
 }
 
 .sidebar .nav-link {
     color: white;
-    transition: background-color 0.5s;
+    transition: all 0.3s ease;
     font-family: 'Poppins', sans-serif;
-    font-size: 26px;
-    padding: 10px 15px; /* Espaciado interno */
-    margin-bottom: 10px; /* Espaciado entre elementos */
-    display: block; /* Asegura que ocupen toda la línea */
-    border-radius: 5px; /* Opcional: Bordes redondeados */
-    background-color: #fd2020;
+    font-size: 18px; /* Reducir tamaño para horizontal */
+    padding: 10px 20px; /* Ajustar espaciado */
+    margin: 0 5px; /* Espaciado entre enlaces */
+    display: flex;
+    align-items: center;
+    border-radius: 5px;
+    background-color: transparent; /* Fondo transparente por defecto */
+    text-decoration: none;
 }
 
-    
 .sidebar .nav-link:hover {
     background-color: #ffffff20;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar .nav-link i {
+    margin-right: 8px;
+    font-size: 18px; /* Tamaño del icono */
+    color: white; /* Color del icono */
+    transition: color 0.3s ease;
+}
+
+.sidebar .nav-link i:hover {
+    color: #ffd700; /* Cambiar color al pasar el mouse */
 }
 
 .table thead th {
@@ -44,14 +62,35 @@
 }
 
 .logo-gba {
-    object-fit: cover;
-    clip-path: inset(5px 0px 5px 0px); /* Ajusta los valores para recortar */
-    margin-top: -50px;
+    height: 50px; /* Ajustar tamaño del logo */
+    margin-right: 20px; /* Espaciado entre logo y enlaces */
+    object-fit: contain;
 }
 
 .btn-primary {
-    background-color: #f01818;
+    background-color: #f01818; /* Rojo intenso */
     border: #f01818;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #d01717; /* Rojo más oscuro al pasar el mouse */
+    border-color: #d01717;
+    transform: scale(1.05);
+}
+
+.btn-danger {
+    background-color: #f01818; /* Mismo color que el botón de actualizar */
+    border-color: #f01818;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+    background-color: #d01717; /* Rojo más oscuro al pasar el mouse */
+    border-color: #d01717;
+    transform: scale(1.05);
 }
 
 hr {
