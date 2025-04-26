@@ -425,4 +425,52 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         }
     }
 
+    public function actualizarGet(string $category, int $id): View
+    {
+        $model = $this->getModel($category);
+        $record = $model::findOrFail($id);
+
+        return view('catalogos.actualizar', [
+            'category' => $category,
+            'record' => $record,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                ucfirst($category) => url("/catalogos/$category"),
+                'Actualizar' => url("/catalogos/$category/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function actualizarPost(Request $request, string $category, int $id): RedirectResponse
+    {
+        $model = $this->getModel($category);
+        $record = $model::findOrFail($id);
+
+        $validated = $request->validate([
+            // Define las reglas de validación según la categoría
+            'fields' => 'required|array'
+        ]);
+
+        $record->update($validated['fields']);
+
+        return redirect("/catalogos/$category")->with('success', ucfirst($category) . ' actualizado correctamente.');
+    }
+
+    private function getModel(string $category)
+    {
+        $models = [
+            'clientes' => Clientes::class,
+            'servicios' => Servicios::class,
+            'empleados' => Empleados::class,
+            'vehiculos' => Vehiculos::class,
+            'reparacion' => Reparacion::class,
+            'pagos' => Pagos::class,
+        ];
+
+        if (!array_key_exists($category, $models)) {
+            abort(404, 'Categoría no encontrada.');
+        }
+
+        return $models[$category];
+    }
 }

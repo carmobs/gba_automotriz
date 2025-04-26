@@ -43,14 +43,12 @@ Route::get('/catalogos/reparacion/agregar', [CatalogosController::class, 'repara
 
 Route::post('/catalogos/reparacion/agregar', [CatalogosController::class, 'reparacionAgregarPost'])->name('reparacion.store');
 
+Route::get('/catalogos/{category}/actualizar/{id}', [CatalogosController::class, 'actualizarGet'])->name('catalogos.actualizar.get');
+Route::post('/catalogos/{category}/actualizar/{id}', [CatalogosController::class, 'actualizarPost'])->name('catalogos.actualizar.post');
+
 Route::delete('/catalogos/clientes/{id}', [CatalogosController::class, 'clientesEliminar'])->name('clientes.destroy');
-
 Route::delete('/catalogos/servicios/{id}', [CatalogosController::class, 'serviciosEliminar'])->name('servicios.destroy');
-
 Route::delete('/catalogos/empleados/{id}', [CatalogosController::class, 'empleadosEliminar'])->name('empleados.destroy');
-
 Route::delete('/catalogos/vehiculos/{id}', [CatalogosController::class, 'vehiculosEliminar'])->name('vehiculos.destroy');
-
 Route::delete('/catalogos/reparacion/{id}', [CatalogosController::class, 'reparacionEliminar'])->name('reparacion.destroy');
-
 Route::delete('/catalogos/pagos/{id}', [CatalogosController::class, 'pagosEliminar'])->name('pagos.destroy');

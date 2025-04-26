@@ -32,10 +32,10 @@
         <td class="text-center">{{ $reparacion->fecha_reparacion }}</td>
         <td class="text-center">{{ $reparacion->estado }}</td>
         <td class="text-center">
-            <a class="btn btn-primary" href="{{url('/catalogos/reparacion/actualizar')}}">Actualizar</a>
+            <a class="btn btn-primary" href="{{ url('/catalogos/reparacion/actualizar/' . $reparacion->id_reparacion) }}">Actualizar</a>
             @component('components.delete-button', ['route' => 'reparacion.destroy', 'id' => $reparacion->id_reparacion])
             @endcomponent
-            <a class="btn btn-primary" href="{{url('/catalogos/reparacion/orden_reparacion')}}">Orden de Reparacion</a>
+            <a class="btn btn-primary" href="{{ url('/catalogos/reparacion/orden_reparacion') }}">Orden de Reparación</a>
         </td>
     </tr>
 @endforeach
