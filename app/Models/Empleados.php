@@ -15,4 +15,18 @@ class Empleados extends Model
     protected $keyType = 'int';
     protected $fillable = ['id_empleados', 'nombre', 'fecha_ingreso', 'estado']; // Corrected field name
     public $timestamps = false;
+
+    public function detalle_Puestos()
+    {
+        return $this->hasMany(Detalle_Puesto::class, 'id_empleados', 'id_empleados');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($empleado) {
+            $empleado->detalle_Puestos()->delete();
+        });
+    }
 }
