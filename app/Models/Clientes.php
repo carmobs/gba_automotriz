@@ -16,4 +16,18 @@ class Clientes extends Model
     protected $telefono;
     protected $fillable = ['nombre', 'telefono'];
     public $timestamps = false;
+
+    public function vehiculos()
+    {
+        return $this->hasMany(Vehiculos::class, 'id_clientes', 'id_clientes');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($cliente) {
+            $cliente->vehiculos()->delete();
+        });
+    }
 }
