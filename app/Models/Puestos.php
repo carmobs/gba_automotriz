@@ -10,7 +10,7 @@ class Puestos extends Model
     use HasFactory;
 
     protected $table = 'puestos';
-    protected $primaryKey = 'id_puesto';
+    protected $primaryKey = 'id_puestos'; // Cambiado de 'id_puesto' a 'id_puestos'
     public $incrementing = false;
     protected $keyType = 'int';
     protected $nombre_puesto;

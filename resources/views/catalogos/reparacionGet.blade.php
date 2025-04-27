@@ -5,7 +5,7 @@
 
 <div class="row my-4">
     <div class="col">
-        <h1>Reparaciones</h1>
+        <h1>Ventas</h1>
     </div>
     <div class="col-auto titlebar-commands">
         <a class="btn btn-primary" href="{{ url('/catalogos/reparacion/agregar') }}">Agregar</a>
@@ -35,7 +35,7 @@
             <a class="btn btn-primary" href="{{ url('/catalogos/reparacion/actualizar/' . $reparacion->id_reparacion) }}">Actualizar</a>
             @component('components.delete-button', ['route' => 'reparacion.destroy', 'id' => $reparacion->id_reparacion])
             @endcomponent
-            <a class="btn btn-primary" href="{{ url('/catalogos/reparacion/orden_reparacion') }}">Orden de Reparación</a>
+            <a class="btn btn-primary" href="{{ url('/catalogos/orden_reparacion/ordenReparacionGet', ['id_reparacion' => $reparacion->id_reparacion]) }}">Orden de Reparación</a>
         </td>
     </tr>
 @endforeach

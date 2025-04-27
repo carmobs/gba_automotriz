@@ -13,11 +13,13 @@ class Orden_Reparacion extends Model
     protected $primaryKey = 'id_detalle_reparacion';
     public $incrementing = true;
     protected $keyType = 'int';
-    protected $id_reparacion;
-    protected $id_servicios;
-    protected $costo_unitario_servicio;
-    protected $cantidad;
-    protected $estado;
     protected $fillable = ['id_reparacion', 'id_servicios', 'costo_unitario_servicio', 'cantidad', 'estado'];
     public $timestamps = false;
+
+    protected $appends = ['total'];
+
+    public function getTotalAttribute()
+    {
+        return $this->costo_unitario_servicio * $this->cantidad;
+    }
 }
