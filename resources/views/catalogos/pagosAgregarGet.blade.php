@@ -15,15 +15,15 @@
     
     <div class="row mb-3">
         <div class="col-md-6">
-                <label for="id_cliente" class="form-label">Cliente</label>
-                <select class="form-select" id="id_cliente" name="id_cliente" required>
-                    <option value="">Seleccione un cliente</option>
-                    @foreach($clientes as $cliente)
-                        <option value="{{ $cliente->id_clientes }}" 
-                            {{ old('id_cliente') == $cliente->id_clientes ? 'selected' : '' }}>
-                            {{ $cliente->nombre }}
-                        </option>
-                    @endforeach
+            <label for="id_cliente" class="form-label">Cliente</label>
+                    <select class="form-select" id="id_cliente" name="id_cliente" required>
+                        <option value="">Seleccione un cliente</option>
+                        @foreach($clientes as $cliente)
+                            <option value="{{ $cliente->id_clientes }}" 
+                                {{ old('id_cliente') == $cliente->id_clientes ? 'selected' : '' }}>
+                                {{ $cliente->nombre }}
+                            </option>
+                        @endforeach
                 </select>
             </div>
             

@@ -14,6 +14,9 @@ use App\Models\Vehiculos;
 use App\Models\Reparacion;
 use App\Models\Pagos;
 use App\Models\Orden_Reparacion;
+use App\Models\Citas;
+use App\Models\Puestos;
+use App\Models\Detalle_Puesto;
 
 class CatalogosController extends Controller
 {
@@ -175,6 +178,63 @@ class CatalogosController extends Controller
             logger()->error("Error deleting empleado with ID: $id - " . $e->getMessage());
             return redirect()->back()->with('error', 'Error al eliminar el empleado: ' . $e->getMessage());
         }
+    }
+
+    public function empleadoPuestosGet($id): View
+    {
+        $empleado = Empleados::findOrFail($id);
+        $puestos = Detalle_Puesto::where('id_empleados', $id)
+            ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos') // Cambiado de 'id_puesto' a 'id_puestos'
+            ->select('detalle_puesto.*', 'puestos.nombre_puesto')
+            ->get();
+
+        $puestosDisponibles = Puestos::all();
+
+        return view('catalogos.empleadoPuestosGet', [
+            'empleado' => $empleado,
+            'puestos' => $puestos,
+            'puestosDisponibles' => $puestosDisponibles,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Empleados' => url('/catalogos/empleados'),
+                'Puestos' => url("/catalogos/empleados/$id/puestos")
+            ]
+        ]);
+    }
+
+    public function empleadoPuestosAgregarGet($id): View
+    {
+        $empleado = Empleados::findOrFail($id);
+        $puestosDisponibles = Puestos::all();
+
+        return view('catalogos.empleadoPuestosAgregarGet', [
+            'empleado' => $empleado,
+            'puestosDisponibles' => $puestosDisponibles,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Empleados' => url('/catalogos/empleados'),
+                'Puestos' => url("/catalogos/empleados/$id/puestos"),
+                'Agregar Puesto' => url("/catalogos/empleados/$id/puestos/agregar")
+            ]
+        ]);
+    }
+
+    public function empleadoPuestosAgregarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_puestos' => 'required|exists:puestos,id_puestos', // Cambiado de 'id_puesto' a 'id_puestos'
+            'fecha_inicio' => 'required|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio'
+        ]);
+
+        Detalle_Puesto::create([
+            'id_empleados' => $id,
+            'id_puestos' => $validated['id_puestos'],
+            'fecha_inicio' => $validated['fecha_inicio'],
+            'fecha_fin' => $validated['fecha_fin']
+        ]);
+
+        return redirect()->route('empleados.puestos.get', $id)->with('success', 'Puesto agregado correctamente.');
     }
 
     public function vehiculosGet():View
@@ -402,9 +462,9 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
         try {
             $reparacion = Reparacion::where('id_clientes', $validated['id_cliente'])->first();
-
+ 
             if (!$reparacion) {
-                return back()->withInput()->with('error', 'No se encontró una reparación asociada al cliente seleccionado.');
+                 return back()->withInput()->with('error', 'No se encontró una reparación asociada al cliente seleccionado.');
             }
 
             Pagos::create([
@@ -434,34 +494,46 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function ordenReparacionGet($id_reparacion = null)
     {
+        if (is_null($id_reparacion)) {
+            return redirect()->route('orden_reparacion.get', ['id_reparacion' => 1]);
+        }
+
         $breadcrumbs = [
             'Inicio' => url('/'),
-            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet')
+            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion)
         ];
 
         $ordenes = Orden_Reparacion::where('id_reparacion', $id_reparacion)->get();
 
-        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes'));
+        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes', 'id_reparacion'));
     }
 
-    public function ordenReparacionAgregarGet()
-    {
+    public function ordenReparacionAgregarGet($id_reparacion = null)
+    {   
+        if (is_null($id_reparacion)) {
+            return redirect()->route('orden_reparacion.get', ['id_reparacion' => 1]);
+        }
+
         $breadcrumbs = [
             'Inicio' => url('/'),
-            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet'),
-            'Agregar Orden de Reparación' => url('/catalogos/orden_reparacion/agregar')
+            'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion),
+            'Agregar Orden de Reparación' => url('/catalogos/orden_reparacion/agregar/' . $id_reparacion)
         ];
 
-        return view('catalogos.ordenReparacionAgregarGet', compact('breadcrumbs'));
+        $servicios = Servicios::all(); // Obtener todos los servicios con sus costos
+
+        return view('catalogos.ordenReparacionAgregarGet', compact('breadcrumbs', 'id_reparacion', 'servicios'));
     }
 
     public function ordenReparacionEliminar($id)
-    {
+    {    
         try {
             $orden = Orden_Reparacion::findOrFail($id);
+            $idReparacion = $orden->id_reparacion; // Obtener el ID de la reparación antes de eliminar
             $orden->delete();
 
-            return redirect()->route('orden_reparacion.get')->with('success', 'Orden de reparación eliminada correctamente');
+            return redirect()->route('orden_reparacion.get', ['id_reparacion' => $idReparacion])
+                ->with('success', 'Orden de reparación eliminada correctamente');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar la orden de reparación: ' . $e->getMessage());
         }
@@ -472,19 +544,227 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         $validated = $request->validate([
             'id_reparacion' => 'required|exists:reparacion,id_reparacion',
             'id_servicios' => 'required|exists:servicios,id_servicios',
-            'costo_unitario_servicio' => 'required|numeric|min:0',
             'cantidad' => 'required|integer|min:1',
+            'costo_unitario_servicio' => 'required|numeric|min:0',
             'estado' => 'required|in:1,0'
-        ]);
+        ]);    
 
         try {
-            Orden_Reparacion::create($validated);
-
+            $orden = Orden_Reparacion::create($validated);
+    
             return redirect()->route('orden_reparacion.get', ['id_reparacion' => $validated['id_reparacion']])
-                ->with('success', 'Orden de reparación agregada correctamente.');
+                ->with('success', 'Orden de reparación agregada correctamente. Total: ' . ($orden->costo_unitario_servicio * $orden->cantidad));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al agregar la orden de reparación: ' . $e->getMessage());
         }
     }
 
+    public function citasGet(): View
+    {
+        $citas = Citas::join("vehiculos", "vehiculos.id_vehiculos", "=", "citas.id_vehiculos")
+            ->select("citas.*", "vehiculos.marca", "vehiculos.modelo")
+            ->get();
+
+        return view('catalogos.citasGet', [
+            'citas' => $citas,
+            "breadcrumbs" => [
+                "Inicio" => url("/"),
+                "Citas" => url("/catalogos/citas")
+            ]
+        ]);
+    }
+
+    public function citasAgregarGet(): View
+    {
+        $vehiculos = Vehiculos::all();
+
+        return view('catalogos.citasAgregarGet', [
+            "breadcrumbs" => [
+                "Inicio" => url("/"),
+                "Citas" => url("/catalogos/citas"),
+                "Agregar" => url("/catalogos/citas/agregar")
+            ],
+            "vehiculos" => $vehiculos
+        ]);
+    }
+
+    public function citasAgregarPost(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+            'fecha_cita' => 'required|date',
+            'hora_cita' => 'required|date_format:H:i',
+            'estado' => 'required|in:Pendiente,Completada,Cancelada'
+        ]);
+
+        Citas::create($validated);
+
+        return redirect()->route('citas.get')->with('success', 'Cita agregada correctamente.');
+    }
+
+    public function citasActualizarGet($id): View
+    {
+        $cita = Citas::findOrFail($id);
+
+        return view('catalogos.actualizar', [
+            'category' => 'citas',
+            'record' => $cita,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Citas' => url('/catalogos/citas'),
+                'Actualizar' => url("/catalogos/citas/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function citasActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'fields.id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+            'fields.fecha_cita' => 'required|date',
+            'fields.hora_cita' => 'required|date_format:H:i',
+            'fields.estado' => 'required|in:Pendiente,Completada,Cancelada'
+        ]);
+
+        $cita = Citas::findOrFail($id);
+        $cita->update($validated['fields']);
+
+        return redirect()->route('citas.get')->with('success', 'Cita actualizada correctamente.');
+    }
+
+    public function citasEliminar($id): RedirectResponse
+    {
+        try {
+            $cita = Citas::findOrFail($id);
+            $cita->delete();
+
+            return redirect()->route('citas.get')->with('success', 'Cita eliminada correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la cita: ' . $e->getMessage());
+        }
+    }
+
+    public function actualizarGet(string $category, int $id): View
+    {
+        $model = $this->getModel($category);
+        $record = $model::findOrFail($id);
+
+        return view('catalogos.actualizar', [
+            'category' => $category,
+            'record' => $record,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                ucfirst($category) => url("/catalogos/$category"),
+                'Actualizar' => url("/catalogos/$category/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function actualizarPost(Request $request, string $category, int $id): RedirectResponse
+    {
+        $model = $this->getModel($category);
+        $record = $model::findOrFail($id);
+
+        $validated = $request->validate([
+            'fields' => 'required|array'
+        ]);
+
+        $record->update($validated['fields']);
+        return redirect("/catalogos/$category")->with('success', ucfirst($category) . ' actualizado correctamente.');
+    }
+
+    private function getModel(string $category)
+    {
+        $models = [
+            'clientes' => Clientes::class,
+            'servicios' => Servicios::class,
+            'empleados' => Empleados::class,
+            'vehiculos' => Vehiculos::class,
+            'reparacion' => Reparacion::class,
+            'pagos' => Pagos::class,
+        ];
+
+        if (!array_key_exists($category, $models)) {
+            abort(404, 'Categoría no encontrada.');
+        }
+
+        return $models[$category];
+    }
+
+    public function puestosGet(): View
+    {
+        $puestos = Puestos::all();
+        return view('catalogos.puestosGet', [
+            'puestos' => $puestos,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Puestos' => url('/catalogos/puestos')
+            ]
+        ]);
+    }
+
+    public function puestosAgregarGet(): View
+    {
+        return view('catalogos.puestosAgregarGet', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Puestos' => url('/catalogos/puestos'),
+                'Agregar' => url('/catalogos/puestos/agregar')
+            ]
+        ]);
+    }
+
+    public function puestosAgregarPost(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nombre_puesto' => 'required|string|max:100',
+            'descripcion' => 'nullable|string|max:255',
+            'sueldo' => 'required|numeric|min:0'
+        ]);
+
+        Puestos::create($validated);
+
+        return redirect()->route('puestos.get')->with('success', 'Puesto agregado correctamente.');
+    }
+
+    public function puestosActualizarGet($id): View
+    {
+        $puesto = Puestos::findOrFail($id);
+
+        return view('catalogos.actualizar', [
+            'category' => 'puestos',
+            'record' => $puesto,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Puestos' => url('/catalogos/puestos'),
+                'Actualizar' => url("/catalogos/puestos/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function puestosActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'fields.nombre_puesto' => 'required|string|max:100',
+            'fields.descripcion' => 'nullable|string|max:255',
+            'fields.sueldo' => 'required|numeric|min:0'
+        ]);
+
+        $puesto = Puestos::findOrFail($id);
+        $puesto->update($validated['fields']);
+
+        return redirect()->route('puestos.get')->with('success', 'Puesto actualizado correctamente.');
+    }
+
+    public function puestosEliminar($id): RedirectResponse
+    {
+        try {
+            $puesto = Puestos::findOrFail($id);
+            $puesto->delete();
+
+            return redirect()->route('puestos.get')->with('success', 'Puesto eliminado correctamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar el puesto: ' . $e->getMessage());
+        }
+    }
 }

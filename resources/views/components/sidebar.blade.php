@@ -13,9 +13,15 @@
         <i class="fas fa-user-tie"></i> Empleados
     </a>
     <a href="{{url('/catalogos/reparacion')}}" class="nav-link">
-        <i class="fas fa-wrench"></i> Reparación
+        <i class="fas fa-wrench"></i> Ventas
     </a>
     <a href="{{url('/catalogos/pagos')}}" class="nav-link">
         <i class="fas fa-credit-card"></i> Pagos
+    </a>
+    <a href="{{ url('/catalogos/citas') }}" class="nav-link">
+        <i class="fas fa-calendar-alt"></i> Citas
+    </a>
+    <a href="{{ url('/catalogos/puestos') }}" class="nav-link">
+        <i class="fas fa-briefcase"></i> Puestos
     </a>
 </nav>

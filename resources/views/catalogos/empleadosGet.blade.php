@@ -30,7 +30,8 @@
         <td class="text-center">{{$empleado->fecha_ingreso}}</td>
         <td class="text-center">{{$empleado->estado}}</td>
         <td class="text-center">
-            <a class="btn btn-primary" href="{{url('/catalogos/empleados/actualizar')}}">Actualizar</a>
+            <a class="btn btn-primary" href="{{ url('/catalogos/empleados/actualizar/' . $empleado->id_empleados) }}">Actualizar</a>
+            <a class="btn btn-primary" href="{{ route('empleados.puestos.get', $empleado->id_empleados) }}">Puestos</a>
             @component('components.delete-button', ['route' => 'empleados.destroy', 'id' => $empleado->id_empleados])
             @endcomponent
         </td>
