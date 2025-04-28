@@ -559,6 +559,40 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         }
     }
 
+    public function ordenReparacionActualizarGet($id): View
+    {
+        logger()->info('GET request received for orden_reparacion.update.get', ['id' => $id]);
+
+        $orden = Orden_Reparacion::findOrFail($id);
+        $servicios = Servicios::all();
+
+        return view('catalogos.ordenReparacionActualizar', [
+            'orden' => $orden,
+            'servicios' => $servicios,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $orden->id_reparacion),
+                'Actualizar' => url("/catalogos/orden_reparacion/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function ordenReparacionActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_servicios' => 'required|exists:servicios,id_servicios',
+            'costo_unitario_servicio' => 'required|numeric|min:0',
+            'cantidad' => 'required|integer|min:1',
+            'estado' => 'required|in:1,0'
+        ]);
+
+        $orden = Orden_Reparacion::findOrFail($id);
+        $orden->update($validated);
+
+        return redirect()->route('orden_reparacion.get', ['id_reparacion' => $orden->id_reparacion])
+            ->with('success', 'Orden de reparación actualizada correctamente.');
+    }
+
     public function citasGet(): View
     {
         $citas = Citas::join("vehiculos", "vehiculos.id_vehiculos", "=", "citas.id_vehiculos")
@@ -604,11 +638,17 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function citasActualizarGet($id): View
     {
-        $cita = Citas::findOrFail($id);
+        // Verifica si el ID existe en la base de datos
+        $cita = Citas::find($id);
+        if (!$cita) {
+            abort(404, 'Cita no encontrada.');
+        }
 
-        return view('catalogos.actualizar', [
-            'category' => 'citas',
-            'record' => $cita,
+        $vehiculos = Vehiculos::all();
+
+        return view('catalogos.citasActualizar', [
+            'cita' => $cita,
+            'vehiculos' => $vehiculos,
             'breadcrumbs' => [
                 'Inicio' => url('/'),
                 'Citas' => url('/catalogos/citas'),
@@ -619,17 +659,30 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function citasActualizarPost(Request $request, $id): RedirectResponse
     {
-        $validated = $request->validate([
-            'fields.id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
-            'fields.fecha_cita' => 'required|date',
-            'fields.hora_cita' => 'required|date_format:H:i',
-            'fields.estado' => 'required|in:Pendiente,Completada,Cancelada'
-        ]);
+        try {
+            // Validar los datos enviados desde el formulario
+            $validated = $request->validate([
+                'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+                'fecha_cita' => 'required|date',
+                'hora_cita' => 'required|date_format:H:i',
+                'estado' => 'required|in:En proceso,Completada,Cancelada' // Actualizado para coincidir con los valores existentes
+            ]);
 
-        $cita = Citas::findOrFail($id);
-        $cita->update($validated['fields']);
+            // Buscar la cita por ID
+            $cita = Citas::findOrFail($id);
 
-        return redirect()->route('citas.get')->with('success', 'Cita actualizada correctamente.');
+            // Actualizar los datos de la cita
+            $cita->update($validated);
+
+            // Redirigir a la lista de citas con un mensaje de éxito
+            return redirect()->route('citas.get')->with('success', 'Cita actualizada correctamente.');
+        } catch (\Exception $e) {
+            // Registrar el error en los logs
+            logger()->error('Error al actualizar la cita', ['id' => $id, 'error' => $e->getMessage()]);
+
+            // Redirigir de vuelta con un mensaje de error
+            return redirect()->back()->with('error', 'Error al actualizar la cita: ' . $e->getMessage());
+        }
     }
 
     public function citasEliminar($id): RedirectResponse
@@ -729,11 +782,10 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function puestosActualizarGet($id): View
     {
-        $puesto = Puestos::findOrFail($id);
+        $puesto = Puestos::findOrFail($id); // Verifica que el puesto exista en la base de datos.
 
-        return view('catalogos.actualizar', [
-            'category' => 'puestos',
-            'record' => $puesto,
+        return view('catalogos.puestosActualizar', [
+            'puesto' => $puesto,
             'breadcrumbs' => [
                 'Inicio' => url('/'),
                 'Puestos' => url('/catalogos/puestos'),
@@ -745,13 +797,13 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function puestosActualizarPost(Request $request, $id): RedirectResponse
     {
         $validated = $request->validate([
-            'fields.nombre_puesto' => 'required|string|max:100',
-            'fields.descripcion' => 'nullable|string|max:255',
-            'fields.sueldo' => 'required|numeric|min:0'
+            'nombre_puesto' => 'required|string|max:100',
+            'descripcion' => 'nullable|string|max:255',
+            'sueldo' => 'required|numeric|min:0'
         ]);
 
-        $puesto = Puestos::findOrFail($id);
-        $puesto->update($validated['fields']);
+        $puesto = Puestos::findOrFail($id); // Verifica que el puesto exista en la base de datos.
+        $puesto->update($validated); // Actualiza los datos del puesto.
 
         return redirect()->route('puestos.get')->with('success', 'Puesto actualizado correctamente.');
     }

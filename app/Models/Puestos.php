@@ -9,13 +9,11 @@ class Puestos extends Model
 {
     use HasFactory;
 
-    protected $table = 'puestos';
-    protected $primaryKey = 'id_puestos'; // Cambiado de 'id_puesto' a 'id_puestos'
-    public $incrementing = false;
-    protected $keyType = 'int';
-    protected $nombre_puesto;
-    protected $descripcion;
-    protected $sueldo;
-    protected $fillable = ['nombre_puesto', 'descripcion','sueldo'];
-    public $timestamps = false;
+    protected $table = 'puestos'; // Nombre correcto de la tabla
+    protected $primaryKey = 'id_puestos'; // Clave primaria correcta
+    public $incrementing = true; // Cambiado a true porque normalmente las claves primarias son autoincrementales
+    protected $keyType = 'int'; // Tipo de clave primaria
+
+    protected $fillable = ['nombre_puesto', 'descripcion', 'sueldo']; // Campos que se pueden asignar masivamente
+    public $timestamps = false; // Desactiva timestamps si no existen en la tabla
 }

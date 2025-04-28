@@ -1,5 +1,7 @@
 <nav class="sidebar nav">
-    <img src="{{ URL::asset('assets/logo GBA.png') }}" alt="logo de gba" class="img-fluid logo-gba">
+    <a href="{{ url('/') }}">
+        <img src="{{ URL::asset('assets/logo GBA.png') }}" alt="logo de gba" class="img-fluid logo-gba">
+    </a>
     <a href="{{url('/catalogos/servicios')}}" class="nav-link">
         <i class="fas fa-tools"></i> Servicios
     </a>
