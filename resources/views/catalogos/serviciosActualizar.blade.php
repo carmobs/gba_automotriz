@@ -5,7 +5,7 @@
 
 <div class="row my-4">
     <div class="col">
-        <h1>Agregar Empleado</h1>
+        <h1>Actualizar Servicio</h1>
     </div>
 </div>
 
@@ -27,34 +27,37 @@
 
 <div class="row">
     <div class="col-md-8">
-        <form method="POST" action="{{ url('/catalogos/empleados/agregar') }}">
+        <form method="POST" action="{{ route('servicios.update.post', $servicio->id_servicios) }}">
             @csrf
             <div class="row my-4">
                 <div class="col">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ old('nombre') }}" required>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $servicio->nombre }}" required>
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="fecha">Fecha Ingreso</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required>
+                        <label for="descripcion">Descripción</label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion" value="{{ $servicio->descripcion }}" required>
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="estado">Estado</label>
-                        <select class="form-control" id="estado" name="estado" required>
-                            <option value="1" {{ old('estado') == '1' ? 'selected' : '' }}>Activo</option>
-                            <option value="0" {{ old('estado') == '0' ? 'selected' : '' }}>Inactivo</option>
-                        </select>
+                        <label for="tiempo">Tiempo</label>
+                        <input type="time" class="form-control" id="tiempo" name="tiempo" value="{{ $servicio->tiempo }}" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="costo">Costo</label>
+                        <input type="number" step="0.01" class="form-control" id="costo" name="costo" value="{{ $servicio->costo }}" required>
                     </div>
                 </div>
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <button type="submit" class="btn btn-primary me-md-2">Guardar</button>
-                <a href="{{ route('empleados.get') }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary me-md-2">Actualizar</button>
+                <a href="{{ route('servicios.get') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
     </div>

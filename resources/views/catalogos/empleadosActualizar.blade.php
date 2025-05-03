@@ -5,7 +5,7 @@
 
 <div class="row my-4">
     <div class="col">
-        <h1>Agregar Empleado</h1>
+        <h1>Actualizar Empleado</h1>
     </div>
 </div>
 
@@ -27,33 +27,33 @@
 
 <div class="row">
     <div class="col-md-8">
-        <form method="POST" action="{{ url('/catalogos/empleados/agregar') }}">
+        <form method="POST" action="{{ route('empleados.update.post', $empleado->id_empleados) }}">
             @csrf
             <div class="row my-4">
                 <div class="col">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ old('nombre') }}" required>
+                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $empleado->nombre }}" required>
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="fecha">Fecha Ingreso</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required>
+                        <label for="fecha_ingreso">Fecha Ingreso</label>
+                        <input type="date" class="form-control" id="fecha_ingreso" name="fecha_ingreso" value="{{ $empleado->fecha_ingreso }}" required>
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
                         <label for="estado">Estado</label>
                         <select class="form-control" id="estado" name="estado" required>
-                            <option value="1" {{ old('estado') == '1' ? 'selected' : '' }}>Activo</option>
-                            <option value="0" {{ old('estado') == '0' ? 'selected' : '' }}>Inactivo</option>
+                            <option value="1" {{ $empleado->estado == 1 ? 'selected' : '' }}>Activo</option>
+                            <option value="0" {{ $empleado->estado == 0 ? 'selected' : '' }}>Inactivo</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <button type="submit" class="btn btn-primary me-md-2">Guardar</button>
+                <button type="submit" class="btn btn-primary me-md-2">Actualizar</button>
                 <a href="{{ route('empleados.get') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>

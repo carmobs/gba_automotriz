@@ -19,6 +19,11 @@
 
     <form method="POST" action="{{ url('/catalogos/reparacion/agregar') }}">
         @csrf
+        @if(session('debug'))
+            <div class="alert alert-info">
+                Debug Info: {{ session('debug') }}
+            </div>
+        @endif
 
         <!-- Selección de Cliente -->
         <div class="mb-3">

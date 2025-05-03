@@ -4,19 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Vehiculos extends Model
 {
     use HasFactory;
-    protected $table = 'vehiculos';
-    protected $primaryKey = 'id_vehiculos';
-    public $incrementing = true;
-    protected $keyType = 'int';
-    protected $id_clientes;
-    protected $marca;
-    protected $modelo;
-    protected $año;
-    protected $detalles_vehiculo;
-    protected $fillable = ['id_clientes', 'marca', 'modelo', 'año', 'detalles_vehiculo'];
-    public $timestamps = false;
+
+    protected $table = 'vehiculos'; // Nombre correcto de la tabla
+    protected $primaryKey = 'id_vehiculos'; // Clave primaria correcta
+    public $incrementing = true; // La clave primaria es autoincremental
+    protected $keyType = 'int'; // Tipo de clave primaria
+
+    protected $fillable = [
+        'id_clientes',
+        'marca',
+        'modelo',
+        'año',
+        'detalles_vehiculo'
+    ]; // Campos asignables
+    public $timestamps = false; // Desactiva timestamps si no existen en la tabla
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Clientes::class, 'id_clientes');
+    }
+
+    public function citas(): HasMany
+    {
+        return $this->hasMany(Citas::class, 'id_vehiculos', 'id_vehiculos');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($vehiculo) {
+            $vehiculo->citas()->delete();
+        });
+    }
 }

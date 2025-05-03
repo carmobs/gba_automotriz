@@ -5,7 +5,7 @@
 
 <div class="row my-4">
     <div class="col">
-        <h1>Agregar Cliente</h1>
+        <h1>Actualizar Cliente</h1>
     </div>
 </div>
 
@@ -27,11 +27,11 @@
 
 <div class="row">
     <div class="col-md-6">
-        <form method="POST" action="{{ url('/catalogos/clientes/agregar') }}" id="clienteForm">
+        <form method="POST" action="{{ route('clientes.update.post', $cliente->id_clientes) }}" id="clienteForm">
             @csrf
             <div class="form-group mb-3">
                 <label for="nombre">Nombre</label>
-                <input type="text" class="form-control" id="nombre" name="nombre" required value="{{ old('nombre') }}">
+                <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $cliente->nombre }}" required>
             </div>
 
             <div class="form-group mb-3">
@@ -42,14 +42,14 @@
                        title="El teléfono debe tener exactamente 10 dígitos"
                        oninput="validarTelefono(this)"
                        required 
-                       value="{{ old('telefono') }}">
+                       value="{{ $cliente->telefono }}">
                 <div id="telefonoError" class="invalid-feedback">
                     El número de teléfono debe tener exactamente 10 dígitos
                 </div>
             </div>
 
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                <button type="submit" class="btn btn-primary me-md-2" id="submitBtn">Guardar</button>
+                <button type="submit" class="btn btn-primary me-md-2" id="submitBtn">Actualizar</button>
                 <a href="{{ route('clientes.get') }}" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>

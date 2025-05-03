@@ -17,6 +17,7 @@ use App\Models\Orden_Reparacion;
 use App\Models\Citas;
 use App\Models\Puestos;
 use App\Models\Detalle_Puesto;
+use Illuminate\Support\Facades\DB;
 
 class CatalogosController extends Controller
 {
@@ -49,14 +50,20 @@ class CatalogosController extends Controller
     }
     public function clientesAgregarPost(Request $request):RedirectResponse
     {
-        $nombre = $request->input('nombre');
-        $telefono = $request->input('telefono');
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/']
+        ], [
+            'telefono.size' => 'El número de teléfono debe tener exactamente 10 dígitos',
+            'telefono.regex' => 'El número de teléfono debe contener solo dígitos'
+        ]);
+
         $clientes = new Clientes([
-            'nombre' => strtoupper($nombre),
-            'telefono' => $telefono
+            'nombre' => strtoupper($validated['nombre']),
+            'telefono' => $validated['telefono']
         ]);
         $clientes->save();
-        return redirect('/catalogos/clientes');
+        return redirect('/catalogos/clientes')->with('success', 'Cliente agregado correctamente');
     }
 
     public function clientesEliminar($id)
@@ -69,6 +76,39 @@ class CatalogosController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar el cliente: ' . $e->getMessage());
         }
+    }
+
+    public function clientesActualizarGet($id): View
+    {
+        $cliente = Clientes::findOrFail($id);
+        
+        return view('catalogos.clientesActualizar', [
+            'cliente' => $cliente,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Clientes' => url('/catalogos/clientes'),
+                'Actualizar' => url("/catalogos/clientes/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function clientesActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/']
+        ], [
+            'telefono.size' => 'El número de teléfono debe tener exactamente 10 dígitos',
+            'telefono.regex' => 'El número de teléfono debe contener solo dígitos'
+        ]);
+
+        $cliente = Clientes::findOrFail($id);
+        $cliente->update([
+            'nombre' => strtoupper($validated['nombre']),
+            'telefono' => $validated['telefono']
+        ]);
+
+        return redirect()->route('clientes.get')->with('success', 'Cliente actualizado correctamente');
     }
 
     public function serviciosGet():View
@@ -126,6 +166,40 @@ class CatalogosController extends Controller
         }
     }
 
+    public function serviciosActualizarGet($id): View
+    {
+        $servicio = Servicios::findOrFail($id);
+        
+        return view('catalogos.serviciosActualizar', [
+            'servicio' => $servicio,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Servicios' => url('/catalogos/servicios'),
+                'Actualizar' => url("/catalogos/servicios/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function serviciosActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'descripcion' => 'required|string|max:255',
+            'tiempo' => 'required',
+            'costo' => 'required|numeric|min:0'
+        ]);
+
+        $servicio = Servicios::findOrFail($id);
+        $servicio->update([
+            'nombre' => strtoupper($validated['nombre']),
+            'descripcion' => $validated['descripcion'],
+            'tiempo' => $validated['tiempo'],
+            'costo' => $validated['costo']
+        ]);
+
+        return redirect()->route('servicios.get')->with('success', 'Servicio actualizado correctamente.');
+    }
+
     public function empleadosGet():View
     {
         $empleados = Empleados::all();
@@ -180,13 +254,59 @@ class CatalogosController extends Controller
         }
     }
 
+    public function empleadosActualizarGet($id): View
+    {
+        $empleado = Empleados::findOrFail($id);
+        
+        return view('catalogos.empleadosActualizar', [
+            'empleado' => $empleado,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Empleados' => url('/catalogos/empleados'),
+                'Actualizar' => url("/catalogos/empleados/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function empleadosActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'fecha_ingreso' => 'required|date',
+            'estado' => 'required|in:0,1'
+        ]);
+
+        $empleado = Empleados::findOrFail($id);
+        $empleado->update([
+            'nombre' => strtoupper($validated['nombre']),
+            'fecha_ingreso' => $validated['fecha_ingreso'],
+            'estado' => $validated['estado']
+        ]);
+
+        return redirect()->route('empleados.get')->with('success', 'Empleado actualizado correctamente.');
+    }
+
     public function empleadoPuestosGet($id): View
     {
         $empleado = Empleados::findOrFail($id);
+        
+        // Obtener los puestos ordenados por fecha de inicio
         $puestos = Detalle_Puesto::where('id_empleados', $id)
-            ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos') // Cambiado de 'id_puesto' a 'id_puestos'
+            ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos')
             ->select('detalle_puesto.*', 'puestos.nombre_puesto')
+            ->orderBy('fecha_inicio', 'asc')
             ->get();
+
+        // Ajustar las fechas de fin
+        for ($i = 0; $i < count($puestos) - 1; $i++) {
+            $fechaInicioSiguiente = \Carbon\Carbon::parse($puestos[$i + 1]->fecha_inicio);
+            $puestos[$i]->fecha_fin = $fechaInicioSiguiente->copy()->subDay()->format('Y-m-d');
+        }
+
+        // El último puesto mantiene su fecha_fin original
+        if (count($puestos) > 0 && !$puestos[count($puestos) - 1]->fecha_fin) {
+            $puestos[count($puestos) - 1]->fecha_fin = null;
+        }
 
         $puestosDisponibles = Puestos::all();
 
@@ -325,6 +445,44 @@ class CatalogosController extends Controller
         }
     }
 
+    public function vehiculosActualizarGet($id): View
+    {
+        $vehiculo = Vehiculos::findOrFail($id);
+        $clientes = Clientes::all();
+        
+        return view('catalogos.vehiculosActualizar', [
+            'vehiculo' => $vehiculo,
+            'clientes' => $clientes,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Vehículos' => url('/catalogos/vehiculos'),
+                'Actualizar' => url("/catalogos/vehiculos/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function vehiculosActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_clientes' => 'required|exists:clientes,id_clientes',
+            'marca' => 'required|string|max:50',
+            'modelo' => 'required|string|max:50',
+            'anio_field' => 'required|integer|min:1900|max:'.(date('Y')+2),
+            'detalles_vehiculo' => 'required|string|max:100'
+        ]);
+
+        $vehiculo = Vehiculos::findOrFail($id);
+        $vehiculo->update([
+            'id_clientes' => $validated['id_clientes'],
+            'marca' => strtoupper($validated['marca']),
+            'modelo' => strtoupper($validated['modelo']),
+            'año' => $validated['anio_field'],
+            'detalles_vehiculo' => $validated['detalles_vehiculo']
+        ]);
+
+        return redirect()->route('vehiculos.get')->with('success', 'Vehículo actualizado correctamente.');
+    }
+
     public function reparacionGet(): View
     {
         $reparaciones = Reparacion::join("clientes", "clientes.id_clientes", "=", "reparacion.id_clientes")
@@ -418,6 +576,59 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         }
     }
 
+    public function reparacionActualizarGet($id): View
+    {
+        $reparacion = Reparacion::findOrFail($id);
+        $clientes = Clientes::all();
+        $empleados = Empleados::where('estado', 1)->get(); // Solo empleados activos
+        
+        return view('catalogos.reparacionActualizar', [
+            'reparacion' => $reparacion,
+            'clientes' => $clientes,
+            'empleados' => $empleados,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reparaciones' => url('/catalogos/reparacion'),
+                'Actualizar' => url("/catalogos/reparacion/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function reparacionActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_clientes' => 'required|exists:clientes,id_clientes',
+            'id_empleados' => 'required|exists:empleados,id_empleados',
+            'fecha_reparacion' => 'required|date|before_or_equal:today',
+            'estado' => 'required|in:En proceso,Completada,Cancelada'
+        ], [
+            'id_clientes.required' => 'El cliente es requerido',
+            'id_clientes.exists' => 'El cliente seleccionado no existe',
+            'id_empleados.required' => 'El empleado es requerido',
+            'id_empleados.exists' => 'El empleado seleccionado no existe',
+            'fecha_reparacion.required' => 'La fecha es requerida',
+            'fecha_reparacion.date' => 'El formato de fecha no es válido',
+            'fecha_reparacion.before_or_equal' => 'La fecha no puede ser futura'
+        ]);
+
+        try {
+            $reparacion = Reparacion::findOrFail($id);
+            
+            $reparacion->id_clientes = $validated['id_clientes'];
+            $reparacion->id_empleados = $validated['id_empleados'];
+            $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
+            $reparacion->estado = $validated['estado'];
+            
+            $reparacion->save();
+
+            return redirect()->route('reparacion.get')
+                ->with('success', 'Reparación actualizada correctamente');
+        } catch (\Exception $e) {
+            return back()->withInput()
+                ->with('error', 'Error al actualizar la reparación: ' . $e->getMessage());
+        }
+    }
+
     public function pagosGet(): View
     {
         $pagos = Pagos::join("reparacion", "reparacion.id_reparacion", "=", "pagos.id_reparacion")
@@ -480,6 +691,49 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         }
     }
 
+    public function pagosActualizarGet($id): View
+    {
+        $pago = Pagos::findOrFail($id);
+        $clientes = Clientes::all();
+        
+        // Obtener el cliente actual a través de la relación reparación
+        $cliente_actual = Clientes::join('reparacion', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+            ->where('reparacion.id_reparacion', $pago->id_reparacion)
+            ->first();
+
+        return view('catalogos.pagosActualizar', [
+            'pago' => $pago,
+            'clientes' => $clientes,
+            'cliente_actual' => $cliente_actual,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Pagos' => url('/catalogos/pagos'),
+                'Actualizar' => url("/catalogos/pagos/actualizar/$id")
+            ]
+        ]);
+    }
+
+    public function pagosActualizarPost(Request $request, $id): RedirectResponse
+    {
+        $validated = $request->validate([
+            'fecha' => 'required|date',
+            'monto' => 'required|numeric|min:0|decimal:0,2'
+        ]);
+
+        try {
+            $pago = Pagos::findOrFail($id);
+            
+            $pago->update([
+                'fecha' => $validated['fecha'],
+                'monto' => $validated['monto']
+            ]);
+
+            return redirect()->route('pagos.get')->with('success', 'Pago actualizado correctamente');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error al actualizar el pago: ' . $e->getMessage());
+        }
+    }
+
     public function pagosEliminar($id): RedirectResponse
     {
         try {
@@ -503,7 +757,13 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion)
         ];
 
-        $ordenes = Orden_Reparacion::where('id_reparacion', $id_reparacion)->get();
+        // Modificar la consulta para incluir la información del cliente
+        $ordenes = Orden_Reparacion::where('orden_reparacion.id_reparacion', $id_reparacion)
+            ->join('servicios', 'orden_reparacion.id_servicios', '=', 'servicios.id_servicios')
+            ->join('reparacion', 'orden_reparacion.id_reparacion', '=', 'reparacion.id_reparacion')
+            ->join('clientes', 'reparacion.id_clientes', '=', 'clientes.id_clientes')
+            ->select('orden_reparacion.*', 'servicios.nombre', 'clientes.nombre as cliente_nombre')
+            ->get();
 
         return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes', 'id_reparacion'));
     }
@@ -595,15 +855,13 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function citasGet(): View
     {
-        $citas = Citas::join("vehiculos", "vehiculos.id_vehiculos", "=", "citas.id_vehiculos")
-            ->select("citas.*", "vehiculos.marca", "vehiculos.modelo")
-            ->get();
+        $citas = Citas::with('vehiculo')->get();
 
         return view('catalogos.citasGet', [
             'citas' => $citas,
-            "breadcrumbs" => [
-                "Inicio" => url("/"),
-                "Citas" => url("/catalogos/citas")
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Citas' => url('/catalogos/citas')
             ]
         ]);
     }
@@ -613,12 +871,12 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         $vehiculos = Vehiculos::all();
 
         return view('catalogos.citasAgregarGet', [
-            "breadcrumbs" => [
-                "Inicio" => url("/"),
-                "Citas" => url("/catalogos/citas"),
-                "Agregar" => url("/catalogos/citas/agregar")
-            ],
-            "vehiculos" => $vehiculos
+            'vehiculos' => $vehiculos,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Citas' => url('/catalogos/citas'),
+                'Agregar' => url('/catalogos/citas/agregar')
+            ]
         ]);
     }
 
@@ -638,12 +896,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function citasActualizarGet($id): View
     {
-        // Verifica si el ID existe en la base de datos
-        $cita = Citas::find($id);
-        if (!$cita) {
-            abort(404, 'Cita no encontrada.');
-        }
-
+        $cita = Citas::findOrFail($id);
         $vehiculos = Vehiculos::all();
 
         return view('catalogos.citasActualizar', [
@@ -660,41 +913,62 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function citasActualizarPost(Request $request, $id): RedirectResponse
     {
         try {
-            // Validar los datos enviados desde el formulario
+            // Validar los datos del formulario
             $validated = $request->validate([
                 'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
                 'fecha_cita' => 'required|date',
                 'hora_cita' => 'required|date_format:H:i',
-                'estado' => 'required|in:En proceso,Completada,Cancelada' // Actualizado para coincidir con los valores existentes
+                'estado' => 'required|in:Pendiente,Completada,Cancelada'
             ]);
 
-            // Buscar la cita por ID
+            // Encontrar la cita
             $cita = Citas::findOrFail($id);
+            
+            // Guardar los datos originales para logging
+            $oldData = $cita->toArray();
 
-            // Actualizar los datos de la cita
-            $cita->update($validated);
+            // Actualizar la cita
+            $updated = $cita->update([
+                'id_vehiculos' => $validated['id_vehiculos'],
+                'fecha_cita' => $validated['fecha_cita'],
+                'hora_cita' => $validated['hora_cita'],
+                'estado' => $validated['estado']
+            ]);
 
-            // Redirigir a la lista de citas con un mensaje de éxito
-            return redirect()->route('citas.get')->with('success', 'Cita actualizada correctamente.');
+            if (!$updated) {
+                throw new \Exception('No se pudo actualizar la cita');
+            }
+
+            // Log de los cambios
+            logger()->info('Cita actualizada exitosamente', [
+                'id' => $id,
+                'old_data' => $oldData,
+                'new_data' => $cita->fresh()->toArray()
+            ]);
+
+            return redirect()
+                ->route('citas.get')
+                ->with('success', 'Cita actualizada correctamente');
+
         } catch (\Exception $e) {
-            // Registrar el error en los logs
-            logger()->error('Error al actualizar la cita', ['id' => $id, 'error' => $e->getMessage()]);
+            logger()->error('Error al actualizar cita:', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
-            // Redirigir de vuelta con un mensaje de error
-            return redirect()->back()->with('error', 'Error al actualizar la cita: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Error al actualizar la cita: ' . $e->getMessage());
         }
     }
 
     public function citasEliminar($id): RedirectResponse
     {
-        try {
-            $cita = Citas::findOrFail($id);
-            $cita->delete();
+        $cita = Citas::findOrFail($id);
+        $cita->delete();
 
-            return redirect()->route('citas.get')->with('success', 'Cita eliminada correctamente.');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error al eliminar la cita: ' . $e->getMessage());
-        }
+        return redirect()->route('citas.get')->with('success', 'Cita eliminada correctamente.');
     }
 
     public function actualizarGet(string $category, int $id): View
@@ -715,6 +989,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function actualizarPost(Request $request, string $category, int $id): RedirectResponse
     {
+        // Validación y actualización general
         $model = $this->getModel($category);
         $record = $model::findOrFail($id);
 
@@ -723,6 +998,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         ]);
 
         $record->update($validated['fields']);
+
         return redirect("/catalogos/$category")->with('success', ucfirst($category) . ' actualizado correctamente.');
     }
 
@@ -776,14 +1052,12 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         ]);
 
         Puestos::create($validated);
-
         return redirect()->route('puestos.get')->with('success', 'Puesto agregado correctamente.');
     }
 
     public function puestosActualizarGet($id): View
     {
         $puesto = Puestos::findOrFail($id); // Verifica que el puesto exista en la base de datos.
-
         return view('catalogos.puestosActualizar', [
             'puesto' => $puesto,
             'breadcrumbs' => [
@@ -804,7 +1078,6 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
         $puesto = Puestos::findOrFail($id); // Verifica que el puesto exista en la base de datos.
         $puesto->update($validated); // Actualiza los datos del puesto.
-
         return redirect()->route('puestos.get')->with('success', 'Puesto actualizado correctamente.');
     }
 
@@ -818,5 +1091,107 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar el puesto: ' . $e->getMessage());
         }
+    }
+
+    public function reportesGet(): View
+    {
+        return view('catalogos.reportes', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reportes' => url('/catalogos/reportes')
+            ]
+        ]);
+    }
+
+    public function reporteCitas(Request $request): View
+    {
+        $citas = null;
+
+        if ($request->has(['fecha_inicio', 'fecha_fin'])) {
+            $validated = $request->validate([
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            ]);
+
+            // Asegúrate de que las fechas estén en el formato correcto
+            $fechaInicio = Carbon::parse($validated['fecha_inicio'])->startOfDay();
+            $fechaFin = Carbon::parse($validated['fecha_fin'])->endOfDay();
+
+            // Ajustar la consulta para incluir las horas correctamente
+            $citas = Citas::join('vehiculos', 'vehiculos.id_vehiculos', '=', 'citas.id_vehiculos')
+                ->select('citas.*', 'vehiculos.marca', 'vehiculos.modelo')
+                ->whereBetween('fecha_cita', [$fechaInicio, $fechaFin])
+                ->get();
+        }
+
+        return view('catalogos.reportesCitas', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reportes' => url('/catalogos/reportes'),
+                'Citas' => url('/catalogos/reportes/citas')
+            ],
+            'citas' => $citas
+        ]);
+    }
+
+    public function reportePagos(Request $request): View
+    {
+        $pagos = null;
+
+        if ($request->has(['fecha_inicio', 'fecha_fin'])) {
+            $validated = $request->validate([
+                'fecha_inicio' => 'required|date',
+                'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            ]);
+
+            $fechaInicio = Carbon::parse($validated['fecha_inicio'])->startOfDay();
+            $fechaFin = Carbon::parse($validated['fecha_fin'])->endOfDay();
+
+            $pagos = Pagos::join('reparacion', 'reparacion.id_reparacion', '=', 'pagos.id_reparacion')
+                ->join('clientes', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+                ->select('pagos.*', 'clientes.nombre as cliente_nombre', 'reparacion.id_reparacion')
+                ->whereBetween('pagos.fecha', [$fechaInicio, $fechaFin])
+                ->get();
+        }
+
+        return view('catalogos.reportesPagos', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reportes' => url('/catalogos/reportes'),
+                'Pagos' => url('/catalogos/reportes/pagos')
+            ],
+            'pagos' => $pagos
+        ]);
+    }
+
+    public function reporteReparaciones(Request $request): View
+    {
+        $reparaciones = null;
+
+        if ($request->has('fecha')) {
+            $validated = $request->validate([
+                'fecha' => 'required|date',
+            ]);
+            $fecha = Carbon::parse($validated['fecha'])->startOfDay();
+
+            $reparaciones = Reparacion::join('clientes', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+                ->join('empleados', 'empleados.id_empleados', '=', 'reparacion.id_empleados')
+                ->select(
+                    'reparacion.*',
+                    'clientes.nombre as cliente_nombre',
+                    'empleados.nombre as mecanico_nombre'
+                )
+                ->whereDate('reparacion.fecha_reparacion', $fecha)
+                ->get();
+        }
+
+        return view('catalogos.reportesReparaciones', [
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Reportes' => url('/catalogos/reportes'),
+                'Reparaciones' => url('/catalogos/reportes/reparaciones')
+            ],
+            'reparaciones' => $reparaciones
+        ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Clientes extends Model
 {
@@ -12,12 +13,11 @@ class Clientes extends Model
     protected $primaryKey = 'id_clientes';
     public $incrementing = true;
     protected $keyType = 'int';
-    protected $nombre;
-    protected $telefono;
     protected $fillable = ['nombre', 'telefono'];
     public $timestamps = false;
 
-    public function vehiculos()
+    // Relación con vehículos
+    public function vehiculos(): HasMany
     {
         return $this->hasMany(Vehiculos::class, 'id_clientes', 'id_clientes');
     }
@@ -27,7 +27,10 @@ class Clientes extends Model
         parent::boot();
 
         static::deleting(function ($cliente) {
-            $cliente->vehiculos()->delete();
+            // Eliminar todos los vehículos asociados al cliente
+            foreach ($cliente->vehiculos as $vehiculo) {
+                $vehiculo->delete(); // Esto también eliminará las citas asociadas
+            }
         });
     }
 }

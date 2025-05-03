@@ -4,16 +4,33 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Citas extends Model
 {
     use HasFactory;
 
-    protected $table = 'citas'; // Nombre correcto de la tabla
-    protected $primaryKey = 'id_citas'; // Clave primaria correcta
-    public $incrementing = true; // La clave primaria es autoincremental
-    protected $keyType = 'int'; // Tipo de clave primaria
+    protected $table = 'citas';
+    protected $primaryKey = 'id_citas';
+    public $incrementing = true;
+    protected $keyType = 'int';
+    public $timestamps = false;
 
-    protected $fillable = ['id_vehiculos', 'fecha_cita', 'hora_cita', 'estado']; // Campos que se pueden asignar masivamente
-    public $timestamps = false; // Desactiva timestamps si no existen en la tabla
+    protected $fillable = [
+        'id_vehiculos',
+        'fecha_cita',
+        'hora_cita',
+        'estado'
+    ];
+
+    protected $casts = [
+        'fecha_cita' => 'date',
+        'hora_cita' => 'datetime:H:i'
+    ];
+
+    // Relación con Vehiculo
+    public function vehiculo(): BelongsTo
+    {
+        return $this->belongsTo(Vehiculos::class, 'id_vehiculos', 'id_vehiculos');
+    }
 }

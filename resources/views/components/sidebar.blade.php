@@ -26,4 +26,7 @@
     <a href="{{ url('/catalogos/puestos') }}" class="nav-link">
         <i class="fas fa-briefcase"></i> Puestos
     </a>
+    <a href="{{ url('/catalogos/reportes') }}" class="nav-link">
+        <i class="fas fa-chart-bar"></i> Reportes
+    </a>
 </nav>

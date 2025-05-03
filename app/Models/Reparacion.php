@@ -19,4 +19,9 @@ class Reparacion extends Model
     protected $estado;
     protected $fillable = ['id_empleado', 'id_cliente', 'fecha_reparacion', 'estado'];
     public $timestamps = false;
+
+    public function cliente()
+    {
+        return $this->belongsTo(Clientes::class, 'id_cliente', 'id_clientes');
+    }
 }
