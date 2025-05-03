@@ -18,7 +18,7 @@
     navegador del usuario-->
     <link href={{ URL::asset('DataTables/datatables.min.css')}} rel="stylesheet"/>
     <script src={{ URL::asset('DataTables/datatables.min.js')}}></script>
-    <link href={{URL::asset("assets/style.css")}} rel="stylesheet" />
+    <link href={{secure_asset("assets/style.css")}} rel="stylesheet" />
 </head>
 <body>
     @component("components.sidebar")
