@@ -30,7 +30,7 @@ Route::prefix('/catalogos/vehiculos')->group(function () {
     Route::get('/', [CatalogosController::class, 'vehiculosGet'])->name('vehiculos.get');
     Route::get('/agregar', [CatalogosController::class, 'vehiculosAgregarGet'])->name('vehiculos.create');
     Route::post('/agregar', [CatalogosController::class, 'vehiculosAgregarPost'])->name('vehiculos.store');
-    Route::get('/actualizar/{id}', [CatalogosController::class, 'vehiculosActualizarGet'])->name('vehiculos.update.get');
+    Route::get('/catalogos/vehiculos/actualizar/{id}', [CatalogosController::class, 'vehiculosActualizarGet'])->name('vehiculos.update.get');
     Route::post('/actualizar/{id}', [CatalogosController::class, 'vehiculosActualizarPost'])->name('vehiculos.update.post');
     Route::delete('/{id}', [CatalogosController::class, 'vehiculosEliminar'])->name('vehiculos.destroy');
 });

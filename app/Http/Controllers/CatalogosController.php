@@ -14,6 +14,7 @@ use App\Models\Vehiculos;
 use App\Models\Reparacion;
 use App\Models\Pagos;
 use App\Models\Orden_Reparacion;
+use Illuminate\Validation\Rule;
 
 class CatalogosController extends Controller
 {
@@ -339,6 +340,44 @@ class CatalogosController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al eliminar el vehículo: ' . $e->getMessage());
         }
+    }
+
+    public function vehiculosActualizarGet($id_vehiculos): View
+    {
+        $vehiculo = Vehiculos::findOrFail($id_vehiculos);
+        $clientes = Clientes::all(); // Obtener todos los clientes para el dropdown
+
+        return view('catalogos.vehiculosActualizar', [
+            'vehiculo' => $vehiculo,
+            'clientes' => $clientes,
+            'breadcrumbs' => [
+                'Inicio' => url('/'),
+                'Vehículos' => route('vehiculos.get'),
+                'Actualizar Vehículo' => url("/catalogos/vehiculos/actualizar/{$id_vehiculos}")
+            ]
+        ]);
+    }
+
+    public function vehiculosActualizarPost(Request $request, $id_vehiculos): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_clientes' => 'required|exists:clientes,id_clientes',
+            'marca' => 'required|string|max:50',
+            'modelo' => 'required|string|max:50',
+            'anio_field' => 'required|integer|min:1900|max:' . (date('Y') + 2),
+            'estado' => ['required', 'string', Rule::in(['activo', 'inactivo'])], // Validación con Rule::in
+        ]);
+
+        $vehiculo = Vehiculos::findOrFail($id_vehiculos);
+        $vehiculo->update([
+            'id_clientes' => $validated['id_clientes'],
+            'marca' => strtoupper($validated['marca']),
+            'modelo' => strtoupper($validated['modelo']),
+            'año' => $validated['anio_field'],
+            'estado' => ucfirst($validated['estado']), // Normalización para varchar
+        ]);
+
+        return redirect()->route('vehiculos.get')->with('success', 'Vehículo actualizado correctamente');
     }
 
     public function reparacionGet(): View

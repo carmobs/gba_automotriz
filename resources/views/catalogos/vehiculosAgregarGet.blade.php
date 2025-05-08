@@ -47,6 +47,16 @@
         </div>
         <div class="col">
             <div class="form-group">
+                <label for="estado">Estado</label>
+                <select class="form-control" id="estado" name="estado" required>
+                    <option value="">Seleccione un estado</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="col">
+            <div class="form-group">
                 <label for="detalles_vehiculo">Detalles del vehiculo</label>
                 <input type="text" class="form-control" id="detalles_vehiculo" name="detalles_vehiculo" placeholder="Agregar detalles del vehiculo" required>
             </div>
