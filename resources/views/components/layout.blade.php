@@ -19,6 +19,8 @@
     <link href={{ secure_asset('DataTables/datatables.min.css')}} rel="stylesheet"/>
     <script src={{ secure_asset('DataTables/datatables.min.js')}}></script>
     <link href={{secure_asset("assets/style.css")}} rel="stylesheet" />
+    <!-- Bootstrap Icons CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body>
     @component("components.sidebar")
