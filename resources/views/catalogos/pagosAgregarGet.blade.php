@@ -4,47 +4,53 @@
 @component('components.breadcrumbs', ['breadcrumbs' => $breadcrumbs])
 @endcomponent
 
-<div class="row my-4">
-    <div class="col">
-        <h1>Registrar Pago</h1>
-    </div>
-    <div class="col"></div>
-</div>
-<form method="POST" action="{{ route('pagos.store') }}">
-    @csrf
-    
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label for="id_cliente" class="form-label">Cliente</label>
-                    <select class="form-select" id="id_cliente" name="id_cliente" required>
-                        <option value="">Seleccione un cliente</option>
-                        @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id_clientes }}" 
-                                {{ old('id_cliente') == $cliente->id_clientes ? 'selected' : '' }}>
-                                {{ $cliente->nombre }}
-                            </option>
-                        @endforeach
-                </select>
-            </div>
-            
-            <div class="col-md-6">
-                <label for="fecha" class="form-label">Fecha de Pago</label>
-                <input type="date" class="form-control" id="fecha" name="fecha" 
-                       value="{{ old('fecha', date('Y-m-d')) }}" required>
-            </div>
+<div class="container">
+    <h1 class="my-4">Registrar Pago</h1>
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
         </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <label for="monto" class="form-label">Monto ($)</label>
-                <input type="number" class="form-control" id="monto" name="monto" 
-                       step="0.01" min="0" value="{{ old('monto') }}" required>
-            </div>
+    @endif
+
+    <form method="POST" action="{{ url('/catalogos/pagos/agregar') }}">
+        @csrf
+        <div class="mb-3">
+            <label for="id_vehiculo" class="form-label">Vehículo del Cliente *</label>
+            <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
+                <option value="">Seleccione un vehículo</option>
+                @foreach($clientes as $cliente)
+                    <option value="{{ $cliente->id_vehiculos }}" 
+                        {{ (old('id_vehiculo', request('id_vehiculo')) == $cliente->id_vehiculos) ? 'selected' : '' }}>
+                        {{ $cliente->cliente_nombre }} - {{ $cliente->marca }} {{ $cliente->modelo }}
+                    </option>
+                @endforeach
+            </select>
+            @error('id_vehiculo')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
-        
-        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-            <button type="submit" class="btn btn-primary">Guardar</button>
+
+        <div class="mb-3">
+            <label for="fecha" class="form-label">Fecha *</label>
+            <input type="date" class="form-control" id="fecha" name="fecha" 
+                   value="{{ old('fecha', date('Y-m-d')) }}" required>
+            @error('fecha')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
         </div>
+
+        <div class="mb-3">
+            <label for="monto" class="form-label">Monto *</label>
+            <input type="number" step="0.01" class="form-control" id="monto" name="monto" 
+                   value="{{ old('monto', request('monto')) }}" required>
+            @error('monto')
+                <div class="text-danger">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <button type="submit" class="btn btn-primary">Registrar Pago</button>
+        <a href="{{ url('/catalogos/pagos') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
 @endsection

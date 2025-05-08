@@ -134,24 +134,27 @@ class CatalogosController extends Controller
     }
     public function serviciosAgregarPost(Request $request): RedirectResponse
     {
-        $nombre = $request->input('nombre');
-        $descripcion = $request->input('descripcion');
-        $tiempo = $request->input('tiempo');
-        $costo = $request->input('costo');
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'descripcion' => 'required|string|max:255',
+            'tiempo' => 'required|numeric|min:0',
+            'costo' => 'required|numeric|min:0'
+        ]);
 
-        // Convertir el tiempo a formato compatible con MySQL (24 horas)
-        $tiempo_formateado = Carbon::parse($tiempo)->format('H:i:s');
-
+        // Convertir horas a formato time (HH:mm:ss)
+        $horas = floor($validated['tiempo']);
+        $minutos = ($validated['tiempo'] - $horas) * 60;
+        $tiempo_formateado = sprintf('%02d:%02d:00', $horas, $minutos);
 
         $servicios = new Servicios([
-            'nombre' => strtoupper($nombre),
-            'descripcion' => $descripcion,
+            'nombre' => strtoupper($validated['nombre']),
+            'descripcion' => $validated['descripcion'],
             'tiempo' => $tiempo_formateado,
-            'costo' => $costo
+            'costo' => $validated['costo']
         ]);
         $servicios->save();
 
-        return redirect('/catalogos/servicios');
+        return redirect('/catalogos/servicios')->with('success', 'Servicio agregado correctamente');
     }
 
     public function serviciosEliminar($id): RedirectResponse
@@ -185,15 +188,20 @@ class CatalogosController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'required|string|max:255',
-            'tiempo' => 'required',
+            'tiempo' => 'required|numeric|min:0',
             'costo' => 'required|numeric|min:0'
         ]);
+
+        // Convertir horas a formato time (HH:mm:ss)
+        $horas = floor($validated['tiempo']);
+        $minutos = ($validated['tiempo'] - $horas) * 60;
+        $tiempo_formateado = sprintf('%02d:%02d:00', $horas, $minutos);
 
         $servicio = Servicios::findOrFail($id);
         $servicio->update([
             'nombre' => strtoupper($validated['nombre']),
             'descripcion' => $validated['descripcion'],
-            'tiempo' => $validated['tiempo'],
+            'tiempo' => $tiempo_formateado,
             'costo' => $validated['costo']
         ]);
 
@@ -485,12 +493,15 @@ class CatalogosController extends Controller
 
     public function reparacionGet(): View
     {
-        $reparaciones = Reparacion::join("clientes", "clientes.id_clientes", "=", "reparacion.id_clientes")
-            ->join("empleados", "empleados.id_empleados", "=", "reparacion.id_empleados")
+        $reparaciones = Reparacion::join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+            ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->join('empleados', 'empleados.id_empleados', '=', 'reparacion.id_empleados')
             ->select(
-                "reparacion.*", 
-                "clientes.nombre as cliente_nombre", 
-                "empleados.nombre as empleado_nombre"
+                'reparacion.*',
+                'clientes.nombre as cliente_nombre',
+                'empleados.nombre as empleado_nombre',
+                'vehiculos.marca',
+                'vehiculos.modelo'
             )
             ->get();
 
@@ -507,6 +518,7 @@ class CatalogosController extends Controller
     {
         $clientes = Clientes::all();
         $empleados = Empleados::all();
+        $vehiculos = Vehiculos::with('cliente')->get();
         
         return view('catalogos/reparacionAgregarGet', [
             'breadcrumbs' => [
@@ -515,54 +527,36 @@ class CatalogosController extends Controller
                 'Agregar Reparación' => url('/catalogos/reparacion/agregar')
             ],
             'clientes' => $clientes,
-            'empleados' => $empleados
+            'empleados' => $empleados,
+            'vehiculos' => $vehiculos
         ]);
     }
 
-    // Procesar el formulario
-// app/Http/Controllers/ReparacionController.php
-public function reparacionAgregarPost(Request $request): RedirectResponse
-{
-    // Validación reforzada
-    $validated = $request->validate([
-        'id_clientes' => [
-            'required',
-            'integer',
-            'exists:clientes,id_clientes'
-        ],
-        'id_empleados' => [
-            'required',
-            'integer',
-            'exists:empleados,id_empleados'
-        ],
-        'fecha_reparacion' => 'required|date|before_or_equal:today',
-        'estado' => 'required|in:En proceso,Completada,Cancelada'
-    ]);
-
-    // Debug: Verificar datos recibidos
-    logger()->debug('Datos antes de guardar:', $validated);
-
-    try {
-        $reparacion = new Reparacion();
-        $reparacion->id_clientes = (int)$validated['id_clientes'];
-        $reparacion->id_empleados = (int)$validated['id_empleados'];
-        $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
-        $reparacion->estado = $validated['estado'];
-        $reparacion->save();
-        
-
-        return redirect('/catalogos/reparacion')->with([
-            'success' => 'Reparación registrada!',
-            'reparacion_id' => $reparacion->id_reparacion
+    public function reparacionAgregarPost(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+            'id_empleados' => 'required|exists:empleados,id_empleados',
+            'fecha_reparacion' => 'required|date|before_or_equal:today',
+            'estado' => 'required|in:En proceso,Completada,Cancelada'
         ]);
-        
-    } catch (\Exception $e) {
-        logger()->error('Error al guardar: '.$e->getMessage());
-        return back()
-               ->withInput()
-               ->with('error', 'Error al guardar: '.$e->getMessage());
+
+        try {
+            $reparacion = new Reparacion();
+            $reparacion->id_vehiculos = $validated['id_vehiculos'];
+            $reparacion->id_empleados = $validated['id_empleados'];
+            $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
+            $reparacion->estado = $validated['estado'];
+            $reparacion->save();
+
+            return redirect('/catalogos/reparacion')->with([
+                'success' => 'Reparación registrada!',
+                'reparacion_id' => $reparacion->id_reparacion
+            ]);
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Error al guardar: '.$e->getMessage());
+        }
     }
-}
 
     public function reparacionEliminar($id): RedirectResponse
     {
@@ -579,12 +573,12 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function reparacionActualizarGet($id): View
     {
         $reparacion = Reparacion::findOrFail($id);
-        $clientes = Clientes::all();
+        $vehiculos = Vehiculos::with('cliente')->get();
         $empleados = Empleados::where('estado', 1)->get(); // Solo empleados activos
         
         return view('catalogos.reparacionActualizar', [
             'reparacion' => $reparacion,
-            'clientes' => $clientes,
+            'vehiculos' => $vehiculos,
             'empleados' => $empleados,
             'breadcrumbs' => [
                 'Inicio' => url('/'),
@@ -597,13 +591,13 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function reparacionActualizarPost(Request $request, $id): RedirectResponse
     {
         $validated = $request->validate([
-            'id_clientes' => 'required|exists:clientes,id_clientes',
+            'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
             'id_empleados' => 'required|exists:empleados,id_empleados',
             'fecha_reparacion' => 'required|date|before_or_equal:today',
             'estado' => 'required|in:En proceso,Completada,Cancelada'
         ], [
-            'id_clientes.required' => 'El cliente es requerido',
-            'id_clientes.exists' => 'El cliente seleccionado no existe',
+            'id_vehiculos.required' => 'El vehículo es requerido',
+            'id_vehiculos.exists' => 'El vehículo seleccionado no existe',
             'id_empleados.required' => 'El empleado es requerido',
             'id_empleados.exists' => 'El empleado seleccionado no existe',
             'fecha_reparacion.required' => 'La fecha es requerida',
@@ -614,7 +608,7 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
         try {
             $reparacion = Reparacion::findOrFail($id);
             
-            $reparacion->id_clientes = $validated['id_clientes'];
+            $reparacion->id_vehiculos = $validated['id_vehiculos'];
             $reparacion->id_empleados = $validated['id_empleados'];
             $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
             $reparacion->estado = $validated['estado'];
@@ -631,12 +625,13 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
     public function pagosGet(): View
     {
-        $pagos = Pagos::join("reparacion", "reparacion.id_reparacion", "=", "pagos.id_reparacion")
-            ->join("clientes", "clientes.id_clientes", "=", "reparacion.id_clientes")
+        $pagos = Pagos::join('reparacion', 'reparacion.id_reparacion', '=', 'pagos.id_reparacion')
+            ->join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+            ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
             ->select(
-                "pagos.*", 
-                "reparacion.id_reparacion", 
-                "clientes.nombre as cliente_nombre"
+                'pagos.*', 
+                'reparacion.id_reparacion', 
+                'clientes.nombre as cliente_nombre'
             )
             ->get();
 
@@ -650,7 +645,12 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     }
     public function pagosAgregarGet(): View
     {
-        $clientes = Clientes::all();
+        $clientes = Vehiculos::join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->select(
+                'vehiculos.*',
+                'clientes.nombre as cliente_nombre'
+            )
+            ->get();
         
         return view('catalogos/pagosAgregarGet', [
             'breadcrumbs' => [
@@ -666,23 +666,38 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
     public function pagosAgregarPost(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'id_cliente' => 'required|exists:clientes,id_clientes',
+            'id_vehiculo' => 'required|exists:vehiculos,id_vehiculos',
             'fecha' => 'required|date',
             'monto' => 'required|numeric|min:0|decimal:0,2'
         ]);
 
         try {
-            $reparacion = Reparacion::where('id_clientes', $validated['id_cliente'])->first();
+            $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])->first();
  
             if (!$reparacion) {
-                 return back()->withInput()->with('error', 'No se encontró una reparación asociada al cliente seleccionado.');
+                 return back()->withInput()->with('error', 'No se encontró una reparación asociada al vehículo seleccionado.');
             }
 
-            Pagos::create([
-                'id_reparacion' => $reparacion->id_reparacion,
-                'fecha' => $validated['fecha'],
-                'monto' => $validated['monto']
-            ]);
+            // Verificar si ya existe un pago para esta reparación
+            if (Pagos::where('id_reparacion', $reparacion->id_reparacion)->exists()) {
+                return back()->withInput()->with('error', 'Ya existe un pago registrado para esta reparación.');
+            }
+
+            DB::transaction(function() use ($validated, $reparacion) {
+                // Crear el pago
+                Pagos::create([
+                    'id_reparacion' => $reparacion->id_reparacion,
+                    'fecha' => $validated['fecha'],
+                    'monto' => $validated['monto']
+                ]);
+
+                // Marcar todas las órdenes de reparación como completadas
+                Orden_Reparacion::where('id_reparacion', $reparacion->id_reparacion)
+                    ->update(['estado' => Orden_Reparacion::ESTADO_COMPLETADO]);
+
+                // Actualizar el estado de la reparación a Completada
+                $reparacion->update(['estado' => 'Completada']);
+            });
 
             return redirect('/catalogos/pagos')->with('success', 'Pago registrado correctamente');
             
@@ -754,18 +769,39 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
 
         $breadcrumbs = [
             'Inicio' => url('/'),
+            'Reparaciones' => url('/catalogos/reparacion'),
             'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion)
         ];
 
-        // Modificar la consulta para incluir la información del cliente
-        $ordenes = Orden_Reparacion::where('orden_reparacion.id_reparacion', $id_reparacion)
-            ->join('servicios', 'orden_reparacion.id_servicios', '=', 'servicios.id_servicios')
-            ->join('reparacion', 'orden_reparacion.id_reparacion', '=', 'reparacion.id_reparacion')
-            ->join('clientes', 'reparacion.id_clientes', '=', 'clientes.id_clientes')
-            ->select('orden_reparacion.*', 'servicios.nombre', 'clientes.nombre as cliente_nombre')
+        // Obtener la información base de la reparación
+        $infoBase = Reparacion::where('reparacion.id_reparacion', $id_reparacion)
+            ->join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+            ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->select(
+                'clientes.nombre as cliente_nombre',
+                'vehiculos.id_vehiculos',
+                'vehiculos.marca',
+                'vehiculos.modelo',
+                'vehiculos.año',
+                'vehiculos.detalles_vehiculo'
+            )
+            ->first();
+
+        // Verificar si la reparación ya está pagada
+        $isPagada = Pagos::where('id_reparacion', $id_reparacion)->exists();
+
+        // Si está pagada, marcar todas las órdenes como completadas
+        if ($isPagada) {
+            Orden_Reparacion::where('id_reparacion', $id_reparacion)
+                ->update(['estado' => Orden_Reparacion::ESTADO_COMPLETADO]);
+        }
+
+        // Obtener las órdenes
+        $ordenes = Orden_Reparacion::where('id_reparacion', $id_reparacion)
+            ->with('servicio')
             ->get();
 
-        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes', 'id_reparacion'));
+        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes', 'id_reparacion', 'infoBase', 'isPagada'));
     }
 
     public function ordenReparacionAgregarGet($id_reparacion = null)
@@ -1148,7 +1184,8 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             $fechaFin = Carbon::parse($validated['fecha_fin'])->endOfDay();
 
             $pagos = Pagos::join('reparacion', 'reparacion.id_reparacion', '=', 'pagos.id_reparacion')
-                ->join('clientes', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+                ->join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+                ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
                 ->select('pagos.*', 'clientes.nombre as cliente_nombre', 'reparacion.id_reparacion')
                 ->whereBetween('pagos.fecha', [$fechaInicio, $fechaFin])
                 ->get();
@@ -1174,7 +1211,8 @@ public function reparacionAgregarPost(Request $request): RedirectResponse
             ]);
             $fecha = Carbon::parse($validated['fecha'])->startOfDay();
 
-            $reparaciones = Reparacion::join('clientes', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+            $reparaciones = Reparacion::join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+                ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
                 ->join('empleados', 'empleados.id_empleados', '=', 'reparacion.id_empleados')
                 ->select(
                     'reparacion.*',

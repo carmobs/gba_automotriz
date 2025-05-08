@@ -17,6 +17,7 @@
     <tr>
         <th scope="col">ID</th>
         <th scope="col">CLIENTE</th>
+        <th scope="col">VEHÍCULO</th>
         <th scope="col">EMPLEADO</th>
         <th scope="col">FECHA</th>
         <th scope="col">ESTADO</th>
@@ -28,6 +29,7 @@
     <tr>
         <td class="text-center">{{ $reparacion->id_reparacion }}</td>
         <td class="text-center">{{ $reparacion->cliente_nombre }}</td>
+        <td class="text-center">{{ $reparacion->marca }} {{ $reparacion->modelo }}</td>
         <td class="text-center">{{ $reparacion->empleado_nombre }}</td>
         <td class="text-center">{{ $reparacion->fecha_reparacion }}</td>
         <td class="text-center">{{ $reparacion->estado }}</td>

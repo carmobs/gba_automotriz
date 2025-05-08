@@ -16,6 +16,9 @@ class Orden_Reparacion extends Model
     protected $fillable = ['id_reparacion', 'id_servicios', 'costo_unitario_servicio', 'cantidad', 'estado'];
     public $timestamps = false;
 
+    const ESTADO_PENDIENTE = 0;
+    const ESTADO_COMPLETADO = 1;
+
     // Relación con servicios
     public function servicio()
     {
@@ -34,5 +37,11 @@ class Orden_Reparacion extends Model
         $total = $this->costo_unitario_servicio * $this->cantidad;
         \Log::info("Calculating total: {$total} for Orden_Reparacion ID: {$this->id_detalle_reparacion}");
         return $total;
+    }
+
+    // Método para verificar si ya está pagada la reparación
+    public function isPagada()
+    {
+        return Pagos::where('id_reparacion', $this->id_reparacion)->exists();
     }
 }

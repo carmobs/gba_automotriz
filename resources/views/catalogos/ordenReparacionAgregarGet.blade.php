@@ -5,53 +5,80 @@
 @endcomponent
 
 <div class="container">
-    <h1 class="my-4">Agregar Orden de Reparación</h1>
+    <h1 class="my-4">Agregar Servicio a la Orden de Reparación</h1>
+
+    @if(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
 
     <form method="POST" action="{{ route('orden_reparacion.store') }}">
         @csrf
         <input type="hidden" name="id_reparacion" value="{{ $id_reparacion }}">
 
         <div class="mb-3">
-            <label for="id_servicios" class="form-label">Servicio</label>
-            <select class="form-select" id="id_servicios" name="id_servicios" required>
-                <option value="">Seleccione un servicio</option>
+            <label for="id_servicios" class="form-label">Servicio *</label>
+            <select class="form-control @error('id_servicios') is-invalid @enderror" 
+                    id="id_servicios" name="id_servicios" required>
+                <option value="">Seleccione un servicio...</option>
                 @foreach($servicios as $servicio)
-                    <option value="{{ $servicio->id_servicios }}" data-costo="{{ $servicio->costo }}">{{ $servicio->nombre }}</option>
+                    <option value="{{ $servicio->id_servicios }}" 
+                            data-costo="{{ $servicio->costo }}"
+                            {{ old('id_servicios') == $servicio->id_servicios ? 'selected' : '' }}>
+                        {{ $servicio->nombre }} - ${{ number_format($servicio->costo, 2) }}
+                    </option>
                 @endforeach
             </select>
+            @error('id_servicios')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
         <div class="mb-3">
-            <label for="costo_unitario_servicio" class="form-label">Costo Unitario</label>
-            <input type="number" step="0.01" class="form-control" id="costo_unitario_servicio" name="costo_unitario_servicio" readonly required>
+            <label for="cantidad" class="form-label">Cantidad *</label>
+            <input type="number" class="form-control @error('cantidad') is-invalid @enderror" 
+                   id="cantidad" name="cantidad" value="{{ old('cantidad', 1) }}" min="1" required>
+            @error('cantidad')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
         <div class="mb-3">
-            <label for="cantidad" class="form-label">Cantidad</label>
-            <input type="number" class="form-control" id="cantidad" name="cantidad" required>
+            <label for="costo_unitario_servicio" class="form-label">Costo Unitario *</label>
+            <input type="number" step="0.01" class="form-control @error('costo_unitario_servicio') is-invalid @enderror" 
+                   id="costo_unitario_servicio" name="costo_unitario_servicio" 
+                   value="{{ old('costo_unitario_servicio') }}" required>
+            @error('costo_unitario_servicio')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
         <div class="mb-3">
-            <label for="estado" class="form-label">Estado</label>
-            <select class="form-select" id="estado" name="estado" required>
-                <option value="1">Activo</option>
-                <option value="0">Inactivo</option>
+            <label for="estado" class="form-label">Estado *</label>
+            <select class="form-control @error('estado') is-invalid @enderror" 
+                    id="estado" name="estado" required>
+                <option value="0" {{ old('estado') == '0' ? 'selected' : '' }}>Pendiente</option>
+                <option value="1" {{ old('estado') == '1' ? 'selected' : '' }}>Completado</option>
             </select>
+            @error('estado')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
         </div>
 
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a href="{{ route('orden_reparacion.get', ['id_reparacion' => $id_reparacion]) }}" class="btn btn-secondary">Cancelar</a>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary me-md-2">Guardar</button>
+            <a href="{{ route('orden_reparacion.get', ['id_reparacion' => $id_reparacion]) }}" 
+               class="btn btn-secondary">Cancelar</a>
+        </div>
     </form>
 </div>
 
 <script>
-    const servicioSelect = document.getElementById('id_servicios');
-    const costoUnitarioInput = document.getElementById('costo_unitario_servicio');
-
-    servicioSelect.addEventListener('change', function () {
-        const selectedOption = servicioSelect.options[servicioSelect.selectedIndex];
-        const costo = parseFloat(selectedOption.getAttribute('data-costo')) || 0;
-        costoUnitarioInput.value = costo.toFixed(2);
-    });
+document.getElementById('id_servicios').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const costo = selectedOption.getAttribute('data-costo');
+    document.getElementById('costo_unitario_servicio').value = costo || '';
+});
 </script>
 @endsection
