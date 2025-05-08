@@ -12,31 +12,36 @@
     </div>
 </div>
 
-<table class="table" id="maintable">
-<thead>
-    <tr>
-        <th scope="col">ID</th>
-        <th scope="col">CLIENTE</th>
-        <th scope="col">ID REPARACIÓN</th>
-        <th scope="col">FECHA</th>
-        <th scope="col">MONTO</th>
-        <th scope="col">ACCIONES</th>
-    </tr>
-</thead>
-<tbody>
-@foreach($pagos as $pago)
-    <tr>
-        <td class="text-center">{{ $pago->id_pagos}}</td>
-        <td class="text-center">{{ $pago->cliente_nombre }}</td>
-        <td class="text-center">{{ $pago->id_reparacion }}</td>
-        <td class="text-center">{{ $pago->fecha }}</td>
-        <td class="text-center">{{ $pago->monto }}</td>
-        <td class="text-center">
-            <a class="btn btn-primary" href="{{ url('/catalogos/pagos/actualizar/' . $pago->id_pagos) }}">Actualizar</a>
-        </td>
-    </tr>
-@endforeach
-</tbody>
+<table class="table">
+    <thead class="bg-light">
+        <tr class="text-center">
+            <th>ID</th>
+            <th>REPARACIÓN</th>
+            <th>CLIENTE</th>
+            <th>FECHA</th>
+            <th>MONTO</th>
+            <th width="280px">ACCIONES</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($pagos as $pago)
+        <tr class="text-center align-middle">
+            <td>{{ $pago->id_pagos }}</td>
+            <td>{{ $pago->id_reparacion }}</td>
+            <td>{{ $pago->cliente_nombre }}</td>
+            <td>{{ date('d/m/Y', strtotime($pago->fecha)) }}</td>
+            <td>${{ number_format($pago->monto, 2) }}</td>
+            <td>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ url('/catalogos/pagos/actualizar/'.$pago->id_pagos) }}" class="btn btn-danger d-flex align-items-center gap-1">
+                        <i class="bi bi-pencil-fill"></i>
+                        <span>Actualizar</span>
+                    </a>
+                </div>
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
 </table>
 
 <script>

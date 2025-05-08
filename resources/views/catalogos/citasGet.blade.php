@@ -1,48 +1,50 @@
-@extends('components.layout')
-
-@section('content')
-@component('components.breadcrumbs', ['breadcrumbs' => $breadcrumbs])
+@extends("components.layout")
+@section("content")
+@component("components.breadcrumbs",["breadcrumbs"=>$breadcrumbs])
 @endcomponent
 
-<div class="row my-4">
-    <div class="col">
-        <h1>Listado de Citas</h1>
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Citas</h1>
+        <a href="{{ url('/catalogos/citas/agregar') }}" class="btn btn-danger">Agregar</a>
     </div>
-    <div class="col-auto titlebar-commands">
-        <a href="{{ route('citas.create') }}" class="btn btn-primary">Agregar</a>
-    </div>
+    
+    <table class="table">
+        <thead class="bg-light">
+            <tr class="text-center">
+                <th>ID</th>
+                <th>VEHÍCULO</th>
+                <th>FECHA</th>
+                <th>HORA</th>
+                <th>ESTADO</th>
+                <th>DETALLES</th>
+                <th width="280px">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($citas as $cita)
+            <tr class="text-center align-middle">
+                <td>{{ $cita->id_citas }}</td>
+                <td>{{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }}</td>
+                <td>{{ date('d/m/Y', strtotime($cita->fecha_cita)) }}</td>
+                <td>{{ date('H:i', strtotime($cita->hora_cita)) }}</td>
+                <td>
+                    <span class="badge {{ $cita->estado == 'Confirmada' ? 'bg-success' : ($cita->estado == 'Cancelada' ? 'bg-danger' : 'bg-warning') }}">
+                        {{ $cita->estado }}
+                    </span>
+                </td>
+                <td>{{ $cita->detalles_vehiculo }}</td>
+                <td>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ url('/catalogos/citas/actualizar/'.$cita->id_citas) }}" class="btn btn-danger d-flex align-items-center gap-1">
+                            <i class="bi bi-pencil-fill"></i>
+                            <span>Actualizar</span>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
-
-<table class="table" id="maintable">
-    <thead>
-        <tr>
-            <th scope="col">ID</th>
-            <th scope="col">VEHÍCULO</th>
-            <th scope="col">FECHA</th>
-            <th scope="col">HORA</th>
-            <th scope="col">ESTADO</th>
-            <th scope="col">ACCIONES</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($citas as $cita)
-        <tr>
-            <td class="text-center">{{ $cita->id_citas }}</td>
-            <td class="text-center">{{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }}</td>
-            <td class="text-center">{{ \Carbon\Carbon::parse($cita->fecha_cita)->format('d/m/Y') }}</td>
-            <td class="text-center">{{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}</td>
-            <td class="text-center">{{ $cita->estado }}</td>
-            <td class="text-center">
-                <a class="btn btn-primary" href="{{ url('/catalogos/citas/actualizar/' . $cita->id_citas) }}">Actualizar</a>
-            </td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-
-<script>
-$(document).ready(function() {
-    $('#maintable').DataTable();
-});
-</script>
 @endsection

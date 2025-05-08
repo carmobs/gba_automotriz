@@ -51,8 +51,9 @@ class CatalogosController extends Controller
     public function clientesAgregarPost(Request $request):RedirectResponse
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:100',
-            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/']
+            'nombre' => 'required|string|max:50',
+            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/'],
+            'estado' => 'required|boolean'
         ], [
             'telefono.size' => 'El número de teléfono debe tener exactamente 10 dígitos',
             'telefono.regex' => 'El número de teléfono debe contener solo dígitos'
@@ -60,7 +61,8 @@ class CatalogosController extends Controller
 
         $clientes = new Clientes([
             'nombre' => strtoupper($validated['nombre']),
-            'telefono' => $validated['telefono']
+            'telefono' => $validated['telefono'],
+            'estado' => $validated['estado']
         ]);
         $clientes->save();
         return redirect('/catalogos/clientes')->with('success', 'Cliente agregado correctamente');
@@ -95,17 +97,16 @@ class CatalogosController extends Controller
     public function clientesActualizarPost(Request $request, $id): RedirectResponse
     {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:100',
-            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/']
-        ], [
-            'telefono.size' => 'El número de teléfono debe tener exactamente 10 dígitos',
-            'telefono.regex' => 'El número de teléfono debe contener solo dígitos'
+            'nombre' => 'required|string|max:50',
+            'telefono' => ['required', 'string', 'size:10', 'regex:/^[0-9]{10}$/'],
+            'estado' => 'required|boolean'
         ]);
 
         $cliente = Clientes::findOrFail($id);
         $cliente->update([
             'nombre' => strtoupper($validated['nombre']),
-            'telefono' => $validated['telefono']
+            'telefono' => $validated['telefono'],
+            'estado' => $validated['estado']
         ]);
 
         return redirect()->route('clientes.get')->with('success', 'Cliente actualizado correctamente');
@@ -137,20 +138,17 @@ class CatalogosController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'required|string|max:255',
-            'tiempo' => 'required|numeric|min:0',
-            'costo' => 'required|numeric|min:0'
+            'tiempo' => 'required|numeric|between:0,99.9',
+            'costo' => 'required|numeric|min:0',
+            'estado' => 'required|boolean'
         ]);
-
-        // Convertir horas a formato time (HH:mm:ss)
-        $horas = floor($validated['tiempo']);
-        $minutos = ($validated['tiempo'] - $horas) * 60;
-        $tiempo_formateado = sprintf('%02d:%02d:00', $horas, $minutos);
 
         $servicios = new Servicios([
             'nombre' => strtoupper($validated['nombre']),
             'descripcion' => $validated['descripcion'],
-            'tiempo' => $tiempo_formateado,
-            'costo' => $validated['costo']
+            'tiempo' => $validated['tiempo'],
+            'costo' => $validated['costo'],
+            'estado' => $validated['estado']
         ]);
         $servicios->save();
 
@@ -188,21 +186,18 @@ class CatalogosController extends Controller
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'required|string|max:255',
-            'tiempo' => 'required|numeric|min:0',
-            'costo' => 'required|numeric|min:0'
+            'tiempo' => 'required|numeric|between:0,99.9',
+            'costo' => 'required|numeric|min:0',
+            'estado' => 'required|boolean'
         ]);
-
-        // Convertir horas a formato time (HH:mm:ss)
-        $horas = floor($validated['tiempo']);
-        $minutos = ($validated['tiempo'] - $horas) * 60;
-        $tiempo_formateado = sprintf('%02d:%02d:00', $horas, $minutos);
 
         $servicio = Servicios::findOrFail($id);
         $servicio->update([
             'nombre' => strtoupper($validated['nombre']),
             'descripcion' => $validated['descripcion'],
-            'tiempo' => $tiempo_formateado,
-            'costo' => $validated['costo']
+            'tiempo' => $validated['tiempo'],
+            'costo' => $validated['costo'],
+            'estado' => $validated['estado']
         ]);
 
         return redirect()->route('servicios.get')->with('success', 'Servicio actualizado correctamente.');
@@ -396,48 +391,26 @@ class CatalogosController extends Controller
     
     public function vehiculosAgregarPost(Request $request): RedirectResponse
     {
-        // Debug inicial (eliminar después de verificar)
-        logger()->debug('Datos recibidos:', $request->all());
-        
-        // Validación modificada
         $validated = $request->validate([
             'id_clientes' => 'required|exists:clientes,id_clientes',
             'marca' => 'required|string|max:50',
             'modelo' => 'required|string|max:50',
             'anio_field' => 'required|integer|min:1900|max:'.(date('Y')+2),
-            'detalles_vehiculo' => 'nullable|string|max:100'
+            'estado' => 'required|boolean'
         ]);
-    
-        // Conversión explícita
-        $anioValue = (int)$validated['anio_field'];
-    
+
         try {
-            // Opción 1: Usando Eloquent
             $vehiculo = new Vehiculos();
             $vehiculo->id_clientes = $validated['id_clientes'];
             $vehiculo->marca = strtoupper($validated['marca']);
             $vehiculo->modelo = strtoupper($validated['modelo']);
-            $vehiculo->año = $anioValue; // Nombre exacto de la columna
-            $vehiculo->detalles_vehiculo = $validated['detalles_vehiculo'];
-            
-            if($vehiculo->save()) {
-                return redirect('/catalogos/vehiculos')->with('success', 'Vehículo guardado');
-            }
-    
-            // Opción 2: Usando Query Builder (si falla Eloquent)
-            DB::table('vehiculos')->insert([
-                'id_clientes' => $validated['id_clientes'],
-                'marca' => strtoupper($validated['marca']),
-                'modelo' => strtoupper($validated['modelo']),
-                'año' => $anioValue,
-                'detalles_vehiculo' => $validated['detalles_vehiculo']
-            ]);
-    
+            $vehiculo->año = $validated['anio_field'];
+            $vehiculo->estado = $validated['estado'];
+            $vehiculo->save();
+
             return redirect('/catalogos/vehiculos')->with('success', 'Vehículo guardado');
-    
         } catch (\Exception $e) {
-            logger()->error('Error al guardar vehículo: '.$e->getMessage());
-            return back()->with('error', 'Error al guardar: '.$e->getMessage())->withInput();
+            return back()->withInput()->with('error', 'Error al guardar: '.$e->getMessage());
         }
     }
 
@@ -476,7 +449,7 @@ class CatalogosController extends Controller
             'marca' => 'required|string|max:50',
             'modelo' => 'required|string|max:50',
             'anio_field' => 'required|integer|min:1900|max:'.(date('Y')+2),
-            'detalles_vehiculo' => 'required|string|max:100'
+            'estado' => 'required|boolean'
         ]);
 
         $vehiculo = Vehiculos::findOrFail($id);
@@ -485,7 +458,7 @@ class CatalogosController extends Controller
             'marca' => strtoupper($validated['marca']),
             'modelo' => strtoupper($validated['modelo']),
             'año' => $validated['anio_field'],
-            'detalles_vehiculo' => $validated['detalles_vehiculo']
+            'estado' => $validated['estado']
         ]);
 
         return redirect()->route('vehiculos.get')->with('success', 'Vehículo actualizado correctamente.');
@@ -496,12 +469,14 @@ class CatalogosController extends Controller
         $reparaciones = Reparacion::join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
             ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
             ->join('empleados', 'empleados.id_empleados', '=', 'reparacion.id_empleados')
+            ->leftJoin('citas', 'citas.id_citas', '=', 'reparacion.id_citas')
             ->select(
                 'reparacion.*',
                 'clientes.nombre as cliente_nombre',
                 'empleados.nombre as empleado_nombre',
                 'vehiculos.marca',
-                'vehiculos.modelo'
+                'vehiculos.modelo',
+                'citas.detalles_vehiculo'
             )
             ->get();
 
@@ -517,8 +492,21 @@ class CatalogosController extends Controller
     public function reparacionAgregarGet(): View
     {
         $clientes = Clientes::all();
-        $empleados = Empleados::all();
-        $vehiculos = Vehiculos::with('cliente')->get();
+        $empleados = Empleados::join('detalle_puesto', 'empleados.id_empleados', '=', 'detalle_puesto.id_empleados')
+            ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos')
+            ->where('puestos.nombre_puesto', 'LIKE', '%MECANICO%')
+            ->where('empleados.estado', 1)
+            ->whereNull('detalle_puesto.fecha_fin')
+            ->select('empleados.*')
+            ->distinct()
+            ->get();
+        $citas = Citas::with(['vehiculo.cliente'])
+            ->whereNotIn('id_citas', function($query) {
+                $query->select('id_citas')
+                    ->from('reparacion')
+                    ->whereNotNull('id_citas');
+            })
+            ->get();
         
         return view('catalogos/reparacionAgregarGet', [
             'breadcrumbs' => [
@@ -528,7 +516,7 @@ class CatalogosController extends Controller
             ],
             'clientes' => $clientes,
             'empleados' => $empleados,
-            'vehiculos' => $vehiculos
+            'citas' => $citas
         ]);
     }
 
@@ -538,15 +526,12 @@ class CatalogosController extends Controller
             'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
             'id_empleados' => 'required|exists:empleados,id_empleados',
             'fecha_reparacion' => 'required|date|before_or_equal:today',
-            'estado' => 'required|in:En proceso,Completada,Cancelada'
+            'estado' => 'required|in:En proceso,Completada,Cancelada',
+            'id_citas' => 'nullable|exists:citas,id_citas'
         ]);
 
         try {
-            $reparacion = new Reparacion();
-            $reparacion->id_vehiculos = $validated['id_vehiculos'];
-            $reparacion->id_empleados = $validated['id_empleados'];
-            $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
-            $reparacion->estado = $validated['estado'];
+            $reparacion = new Reparacion($validated);
             $reparacion->save();
 
             return redirect('/catalogos/reparacion')->with([
@@ -574,12 +559,36 @@ class CatalogosController extends Controller
     {
         $reparacion = Reparacion::findOrFail($id);
         $vehiculos = Vehiculos::with('cliente')->get();
-        $empleados = Empleados::where('estado', 1)->get(); // Solo empleados activos
+        
+        $empleados = Empleados::join('detalle_puesto', 'empleados.id_empleados', '=', 'detalle_puesto.id_empleados')
+            ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos')
+            ->where('puestos.nombre_puesto', 'LIKE', '%MECANICO%')
+            ->where('empleados.estado', 1)
+            ->whereNull('detalle_puesto.fecha_fin')
+            ->select('empleados.*')
+            ->distinct()
+            ->get();
+
+        $citas = Citas::with(['vehiculo.cliente'])
+            ->where(function($query) use ($id) {
+                $query->whereNotIn('id_citas', function($subquery) {
+                    $subquery->select('id_citas')
+                        ->from('reparacion')
+                        ->whereNotNull('id_citas');
+                })
+                ->orWhereIn('id_citas', function($subquery) use ($id) {
+                    $subquery->select('id_citas')
+                        ->from('reparacion')
+                        ->where('id_reparacion', $id);
+                });
+            })
+            ->get();
         
         return view('catalogos.reparacionActualizar', [
             'reparacion' => $reparacion,
             'vehiculos' => $vehiculos,
             'empleados' => $empleados,
+            'citas' => $citas,
             'breadcrumbs' => [
                 'Inicio' => url('/'),
                 'Reparaciones' => url('/catalogos/reparacion'),
@@ -594,26 +603,13 @@ class CatalogosController extends Controller
             'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
             'id_empleados' => 'required|exists:empleados,id_empleados',
             'fecha_reparacion' => 'required|date|before_or_equal:today',
-            'estado' => 'required|in:En proceso,Completada,Cancelada'
-        ], [
-            'id_vehiculos.required' => 'El vehículo es requerido',
-            'id_vehiculos.exists' => 'El vehículo seleccionado no existe',
-            'id_empleados.required' => 'El empleado es requerido',
-            'id_empleados.exists' => 'El empleado seleccionado no existe',
-            'fecha_reparacion.required' => 'La fecha es requerida',
-            'fecha_reparacion.date' => 'El formato de fecha no es válido',
-            'fecha_reparacion.before_or_equal' => 'La fecha no puede ser futura'
+            'estado' => 'required|in:En proceso,Completada,Cancelada',
+            'id_citas' => 'nullable|exists:citas,id_citas'
         ]);
 
         try {
             $reparacion = Reparacion::findOrFail($id);
-            
-            $reparacion->id_vehiculos = $validated['id_vehiculos'];
-            $reparacion->id_empleados = $validated['id_empleados'];
-            $reparacion->fecha_reparacion = $validated['fecha_reparacion'];
-            $reparacion->estado = $validated['estado'];
-            
-            $reparacion->save();
+            $reparacion->update($validated);
 
             return redirect()->route('reparacion.get')
                 ->with('success', 'Reparación actualizada correctamente');
@@ -672,30 +668,31 @@ class CatalogosController extends Controller
         ]);
 
         try {
-            $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])->first();
- 
+            // Obtener la reparación más reciente del vehículo que no esté pagada
+            $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])
+                ->whereNotIn('id_reparacion', function($query) {
+                    $query->select('id_reparacion')
+                          ->from('pagos');
+                })
+                ->orderBy('fecha_reparacion', 'desc')
+                ->first();
+
             if (!$reparacion) {
-                 return back()->withInput()->with('error', 'No se encontró una reparación asociada al vehículo seleccionado.');
+                return back()->withInput()->with('error', 'No se encontró una reparación pendiente de pago para este vehículo.');
             }
 
-            // Verificar si ya existe un pago para esta reparación
-            if (Pagos::where('id_reparacion', $reparacion->id_reparacion)->exists()) {
-                return back()->withInput()->with('error', 'Ya existe un pago registrado para esta reparación.');
-            }
+            // Crear el pago
+            Pagos::create([
+                'id_reparacion' => $reparacion->id_reparacion,
+                'fecha' => $validated['fecha'],
+                'monto' => $validated['monto']
+            ]);
 
-            DB::transaction(function() use ($validated, $reparacion) {
-                // Crear el pago
-                Pagos::create([
-                    'id_reparacion' => $reparacion->id_reparacion,
-                    'fecha' => $validated['fecha'],
-                    'monto' => $validated['monto']
-                ]);
-
-                // Marcar todas las órdenes de reparación como completadas
+            // Actualizar el estado de la reparación y sus órdenes
+            DB::transaction(function() use ($reparacion) {
                 Orden_Reparacion::where('id_reparacion', $reparacion->id_reparacion)
                     ->update(['estado' => Orden_Reparacion::ESTADO_COMPLETADO]);
 
-                // Actualizar el estado de la reparación a Completada
                 $reparacion->update(['estado' => 'Completada']);
             });
 
@@ -711,8 +708,9 @@ class CatalogosController extends Controller
         $pago = Pagos::findOrFail($id);
         $clientes = Clientes::all();
         
-        // Obtener el cliente actual a través de la relación reparación
-        $cliente_actual = Clientes::join('reparacion', 'clientes.id_clientes', '=', 'reparacion.id_clientes')
+        // Corregir la consulta para obtener el cliente actual
+        $cliente_actual = Clientes::join('vehiculos', 'vehiculos.id_clientes', '=', 'clientes.id_clientes')
+            ->join('reparacion', 'reparacion.id_vehiculos', '=', 'vehiculos.id_vehiculos')
             ->where('reparacion.id_reparacion', $pago->id_reparacion)
             ->first();
 
@@ -773,17 +771,17 @@ class CatalogosController extends Controller
             'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion)
         ];
 
-        // Obtener la información base de la reparación
         $infoBase = Reparacion::where('reparacion.id_reparacion', $id_reparacion)
             ->join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
             ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->leftJoin('citas', 'citas.id_citas', '=', 'reparacion.id_citas')
             ->select(
                 'clientes.nombre as cliente_nombre',
                 'vehiculos.id_vehiculos',
                 'vehiculos.marca',
                 'vehiculos.modelo',
                 'vehiculos.año',
-                'vehiculos.detalles_vehiculo'
+                'citas.detalles_vehiculo'
             )
             ->first();
 
@@ -801,7 +799,9 @@ class CatalogosController extends Controller
             ->with('servicio')
             ->get();
 
-        return view('catalogos.ordenReparacionGet', compact('breadcrumbs', 'ordenes', 'id_reparacion', 'infoBase', 'isPagada'));
+        return view('catalogos.ordenReparacionGet', 
+            compact('breadcrumbs', 'ordenes', 'id_reparacion', 'infoBase', 'isPagada')
+        );
     }
 
     public function ordenReparacionAgregarGet($id_reparacion = null)
@@ -810,15 +810,33 @@ class CatalogosController extends Controller
             return redirect()->route('orden_reparacion.get', ['id_reparacion' => 1]);
         }
 
+        // Add query to get vehicle and client info
+        $infoBase = Reparacion::where('reparacion.id_reparacion', $id_reparacion)
+            ->join('vehiculos', 'vehiculos.id_vehiculos', '=', 'reparacion.id_vehiculos')
+            ->join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->leftJoin('citas', function($join) {
+                $join->on('vehiculos.id_vehiculos', '=', 'citas.id_vehiculos')
+                     ->orderBy('citas.fecha_cita', 'desc');
+            })
+            ->select(
+                'clientes.nombre as cliente_nombre',
+                'vehiculos.id_vehiculos',
+                'vehiculos.marca',
+                'vehiculos.modelo',
+                'vehiculos.año',
+                'citas.detalles_vehiculo'
+            )
+            ->first();
+
+        $servicios = Servicios::where('estado', 1)->get();
+
         $breadcrumbs = [
             'Inicio' => url('/'),
             'Órdenes de Reparación' => url('/catalogos/orden_reparacion/ordenReparacionGet/' . $id_reparacion),
-            'Agregar Orden de Reparación' => url('/catalogos/orden_reparacion/agregar/' . $id_reparacion)
+            'Agregar Servicio' => url('/catalogos/orden_reparacion/agregar/' . $id_reparacion)
         ];
 
-        $servicios = Servicios::all(); // Obtener todos los servicios con sus costos
-
-        return view('catalogos.ordenReparacionAgregarGet', compact('breadcrumbs', 'id_reparacion', 'servicios'));
+        return view('catalogos.ordenReparacionAgregarGet', compact('breadcrumbs', 'id_reparacion', 'servicios', 'infoBase'));
     }
 
     public function ordenReparacionEliminar($id)
@@ -922,11 +940,11 @@ class CatalogosController extends Controller
             'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
             'fecha_cita' => 'required|date',
             'hora_cita' => 'required|date_format:H:i',
-            'estado' => 'required|in:Pendiente,Completada,Cancelada'
+            'estado' => 'required|string|max:100',
+            'detalles_vehiculo' => 'nullable|string|max:100'
         ]);
 
         Citas::create($validated);
-
         return redirect()->route('citas.get')->with('success', 'Cita agregada correctamente.');
     }
 
@@ -948,55 +966,18 @@ class CatalogosController extends Controller
 
     public function citasActualizarPost(Request $request, $id): RedirectResponse
     {
-        try {
-            // Validar los datos del formulario
-            $validated = $request->validate([
-                'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
-                'fecha_cita' => 'required|date',
-                'hora_cita' => 'required|date_format:H:i',
-                'estado' => 'required|in:Pendiente,Completada,Cancelada'
-            ]);
+        $validated = $request->validate([
+            'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+            'fecha_cita' => 'required|date',
+            'hora_cita' => 'required|date_format:H:i',
+            'estado' => 'required|string|max:100',
+            'detalles_vehiculo' => 'nullable|string|max:100'
+        ]);
 
-            // Encontrar la cita
-            $cita = Citas::findOrFail($id);
-            
-            // Guardar los datos originales para logging
-            $oldData = $cita->toArray();
+        $cita = Citas::findOrFail($id);
+        $cita->update($validated);
 
-            // Actualizar la cita
-            $updated = $cita->update([
-                'id_vehiculos' => $validated['id_vehiculos'],
-                'fecha_cita' => $validated['fecha_cita'],
-                'hora_cita' => $validated['hora_cita'],
-                'estado' => $validated['estado']
-            ]);
-
-            if (!$updated) {
-                throw new \Exception('No se pudo actualizar la cita');
-            }
-
-            // Log de los cambios
-            logger()->info('Cita actualizada exitosamente', [
-                'id' => $id,
-                'old_data' => $oldData,
-                'new_data' => $cita->fresh()->toArray()
-            ]);
-
-            return redirect()
-                ->route('citas.get')
-                ->with('success', 'Cita actualizada correctamente');
-
-        } catch (\Exception $e) {
-            logger()->error('Error al actualizar cita:', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return back()
-                ->withInput()
-                ->with('error', 'Error al actualizar la cita: ' . $e->getMessage());
-        }
+        return redirect()->route('citas.get')->with('success', 'Cita actualizada correctamente.');
     }
 
     public function citasEliminar($id): RedirectResponse
@@ -1082,9 +1063,10 @@ class CatalogosController extends Controller
     public function puestosAgregarPost(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'nombre_puesto' => 'required|string|max:100',
-            'descripcion' => 'nullable|string|max:255',
-            'sueldo' => 'required|numeric|min:0'
+            'nombre_puesto' => 'required|string|max:50',
+            'descripcion' => 'nullable|string',
+            'sueldo' => 'required|numeric|min:0',
+            'estado' => 'required|boolean'
         ]);
 
         Puestos::create($validated);
@@ -1107,9 +1089,10 @@ class CatalogosController extends Controller
     public function puestosActualizarPost(Request $request, $id): RedirectResponse
     {
         $validated = $request->validate([
-            'nombre_puesto' => 'required|string|max:100',
-            'descripcion' => 'nullable|string|max:255',
-            'sueldo' => 'required|numeric|min:0'
+            'nombre_puesto' => 'required|string|max:50',
+            'descripcion' => 'nullable|string',
+            'sueldo' => 'required|numeric|min:0',
+            'estado' => 'required|boolean'
         ]);
 
         $puesto = Puestos::findOrFail($id); // Verifica que el puesto exista en la base de datos.

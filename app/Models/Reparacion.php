@@ -17,11 +17,27 @@ class Reparacion extends Model
     protected $id_vehiculos;
     protected $fecha_reparacion;
     protected $estado;
-    protected $fillable = ['id_empleados', 'id_vehiculos', 'fecha_reparacion', 'estado'];
+    protected $fillable = [
+        'id_empleados',
+        'id_vehiculos',
+        'fecha_reparacion',
+        'estado',
+        'id_citas'
+    ];
     public $timestamps = false;
 
     public function vehiculo()
     {
         return $this->belongsTo(Vehiculos::class, 'id_vehiculos', 'id_vehiculos');
+    }
+
+    public function empleado()
+    {
+        return $this->belongsTo(Empleados::class, 'id_empleados');
+    }
+
+    public function cita()
+    {
+        return $this->belongsTo(Citas::class, 'id_citas');
     }
 }

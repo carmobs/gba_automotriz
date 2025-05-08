@@ -7,6 +7,30 @@
 <div class="container">
     <h1 class="my-4">Agregar Servicio a la Orden de Reparación</h1>
 
+    <!-- Vehicle and Client Info Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0">Información de la Reparación #{{ $id_reparacion }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="card-subtitle mb-2 text-muted">Información del Cliente</h6>
+                    <p class="card-text"><strong>Cliente:</strong> {{ $infoBase->cliente_nombre }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="card-subtitle mb-2 text-muted">Información del Vehículo</h6>
+                    <p class="card-text"><strong>Marca:</strong> {{ $infoBase->marca }}</p>
+                    <p class="card-text"><strong>Modelo:</strong> {{ $infoBase->modelo }}</p>
+                    <p class="card-text"><strong>Año:</strong> {{ $infoBase->año }}</p>
+                    @if($infoBase->detalles_vehiculo)
+                        <p class="card-text"><strong>Detalles:</strong> {{ $infoBase->detalles_vehiculo }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(session('error'))
         <div class="alert alert-danger">
             {{ session('error') }}

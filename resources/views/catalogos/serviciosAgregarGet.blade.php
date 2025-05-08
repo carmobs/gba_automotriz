@@ -2,46 +2,35 @@
 @section("content")
 @component("components.breadcrumbs",["breadcrumbs"=>$breadcrumbs])
 @endcomponent
-
-<div class="row my-4">
-    <div class="col">
-        <h1>Agregar servicio</h1>
-    </div>
-    <div class="col"></div>
+<div class="container">
+    <h2>Agregar Servicio</h2>
+    <form method="POST" action="{{ url('/catalogos/servicios/agregar') }}">
+        @csrf
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="100">
+        </div>
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="tiempo" class="form-label">Tiempo (horas)</label>
+            <input type="number" class="form-control" id="tiempo" name="tiempo" required step="0.1" min="0" max="99.9">
+        </div>
+        <div class="mb-3">
+            <label for="costo" class="form-label">Costo</label>
+            <input type="number" class="form-control" id="costo" name="costo" required step="0.01" min="0">
+        </div>
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-control" id="estado" name="estado" required>
+                <option value="1">Activo</option>
+                <option value="0">Inactivo</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{{ url('/catalogos/servicios') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
 </div>
-<form method="post" action="{{url('/catalogos/servicios/agregar')}}">
-    @csrf
-    <div class="row my-4">
-        <div class="col">
-            <div class="form-group">
-                <label for="nombre">Nombre</label>
-                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Agregar nombre" required>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="descripcion">Descripcion</label>
-                <input type="text" class="form-control" id="descripcion" name="descripcion" placeholder="Agregar descripcion" required>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="tiempo">Tiempo (horas)</label>
-                <input type="number" min="0" step="0.5" class="form-control" id="tiempo" name="tiempo" placeholder="Ejemplo: 2.5" required>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="costo">Costo</label>
-                <input type="text" class="form-control" id="costo" name="costo" placeholder="Agregar costo" required>
-            </div>
-        </div>
-    </div>
-    <div class="row my-4">
-        <div class="col">
-            <br>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </div>
-    </div>
-</form>
 @endsection

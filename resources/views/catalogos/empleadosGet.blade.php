@@ -28,10 +28,22 @@
         <td class="text-center">{{ $empleado->id_empleados }}</td>
         <td class="text-center">{{ $empleado->nombre }}</td>
         <td class="text-center">{{ \Carbon\Carbon::parse($empleado->fecha_ingreso)->format('d/m/Y') }}</td>
-        <td class="text-center">{{ $empleado->estado == 1 ? 'Activo' : 'Inactivo' }}</td>
         <td class="text-center">
-            <a class="btn btn-primary" href="{{ route('empleados.update.get', $empleado->id_empleados) }}">Actualizar</a>
-            <a class="btn btn-primary" href="{{ route('empleados.puestos.get', $empleado->id_empleados) }}">Puestos</a>
+            <span class="badge {{ $empleado->estado ? 'bg-success' : 'bg-danger' }}">
+                {{ $empleado->estado ? 'Activo' : 'Inactivo' }}
+            </span>
+        </td>
+        <td>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="{{ url('/catalogos/empleados/actualizar/'.$empleado->id_empleados) }}" class="btn btn-danger d-flex align-items-center gap-1">
+                    <i class="bi bi-pencil-fill"></i>
+                    <span>Actualizar</span>
+                </a>
+                <a href="{{ url('/catalogos/empleados/'.$empleado->id_empleados.'/puestos') }}" class="btn btn-danger d-flex align-items-center gap-1">
+                    <i class="bi bi-briefcase-fill"></i>
+                    <span>Puestos</span>
+                </a>
+            </div>
         </td>
     </tr>
 @endforeach

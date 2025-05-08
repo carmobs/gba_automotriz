@@ -20,7 +20,8 @@ class Citas extends Model
         'id_vehiculos',
         'fecha_cita',
         'hora_cita',
-        'estado'
+        'estado',
+        'detalles_vehiculo'
     ];
 
     protected $casts = [
@@ -31,6 +32,6 @@ class Citas extends Model
     // Relación con Vehiculo
     public function vehiculo(): BelongsTo
     {
-        return $this->belongsTo(Vehiculos::class, 'id_vehiculos', 'id_vehiculos');
+        return $this->belongsTo(Vehiculos::class, 'id_vehiculos');
     }
 }

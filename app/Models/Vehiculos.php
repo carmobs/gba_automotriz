@@ -21,13 +21,18 @@ class Vehiculos extends Model
         'marca',
         'modelo',
         'año',
-        'detalles_vehiculo'
+        'estado'
     ]; // Campos asignables
     public $timestamps = false; // Desactiva timestamps si no existen en la tabla
 
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Clientes::class, 'id_clientes');
+    }
+
+    public function reparaciones(): HasMany
+    {
+        return $this->hasMany(Reparacion::class, 'id_vehiculos');
     }
 
     public function citas(): HasMany

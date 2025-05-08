@@ -2,61 +2,40 @@
 @section("content")
 @component("components.breadcrumbs",["breadcrumbs"=>$breadcrumbs])
 @endcomponent
-
-<div class="row my-4">
-    <div class="col">
-        <h1>Agregar vehiculo</h1>
-    </div>
-    <div class="col"></div>
+<div class="container">
+    <h2>Agregar Vehículo</h2>
+    <form method="POST" action="{{ url('/catalogos/vehiculos/agregar') }}">
+        @csrf
+        <div class="mb-3">
+            <label for="id_clientes" class="form-label">Cliente</label>
+            <select class="form-control" id="id_clientes" name="id_clientes" required>
+                <option value="">Seleccione un cliente</option>
+                @foreach($clientes as $cliente)
+                    <option value="{{ $cliente->id_clientes }}">{{ $cliente->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="marca" class="form-label">Marca</label>
+            <input type="text" class="form-control" id="marca" name="marca" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label for="modelo" class="form-label">Modelo</label>
+            <input type="text" class="form-control" id="modelo" name="modelo" required maxlength="50">
+        </div>
+        <div class="mb-3">
+            <label for="anio_field" class="form-label">Año</label>
+            <input type="number" class="form-control" id="anio_field" name="anio_field" required min="1900" max="{{ date('Y')+2 }}">
+        </div>
+        <div class="mb-3">
+            <label for="estado" class="form-label">Estado</label>
+            <select class="form-control" id="estado" name="estado" required>
+                <option value="1">Activo</option>
+                <option value="0">Inactivo</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+        <a href="{{ url('/catalogos/vehiculos') }}" class="btn btn-secondary">Cancelar</a>
+    </form>
 </div>
-<form method="post" action="{{url('/catalogos/vehiculos/agregar')}}">
-    @csrf
-    <div class="row my-4">
-        <div class="col">
-            <div class="form-group">
-                <label for="id_clientes">Cliente</label>
-                <select class="form-control" id="id_clientes" name="id_clientes" required>
-                    <option value="">Seleccione un cliente</option>
-                    @foreach($clientes as $cliente)
-                        <option value="{{ $cliente->id_clientes }}">{{ $cliente->nombre }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="marca">Marca</label>
-                <input type="text" class="form-control" id="marca" name="marca" placeholder="Agregar marca" required>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="modelo">Modelo</label>
-                <input type="text" class="form-control" id="modelo" name="modelo" placeholder="Agregar modelo" required>
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="anio_field">Año del Vehículo</label>
-                <input type="number" class="form-control" id="anio_field" name="anio_field"
-                       min="1900" max="{{ date('Y')+2 }}" 
-                       value="{{ old('anio_field') }}" required
-                       oninvalid="this.setCustomValidity('Por favor ingrese un año válido entre 1900 y {{ date('Y')+2 }}')"
-                       oninput="this.setCustomValidity('')">
-            </div>
-        </div>
-        <div class="col">
-            <div class="form-group">
-                <label for="detalles_vehiculo">Detalles del vehiculo</label>
-                <input type="text" class="form-control" id="detalles_vehiculo" name="detalles_vehiculo" placeholder="Agregar detalles del vehiculo" required>
-            </div>
-        </div>
-    </div>
-    <div class="row my-4">
-        <div class="col">
-            <br>
-            <button type="submit" class="btn btn-primary">Guardar</button>
-        </div>
-    </div>
-</form>
 @endsection

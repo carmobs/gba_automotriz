@@ -3,45 +3,47 @@
 @component("components.breadcrumbs",["breadcrumbs"=>$breadcrumbs])
 @endcomponent
 
-<div class="row my-4">
-    <div class="col">
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>Servicios</h1>
+        <a href="{{ url('/catalogos/servicios/agregar') }}" class="btn btn-danger">Agregar</a>
     </div>
-    <div class="col-auto titlebar-commands">
-        <a class = "btn btn-primary" href="{{url('/catalogos/servicios/agregar')}}">Agregar</a>
-    </div>
+    
+    <table class="table">
+        <thead class="bg-light">
+            <tr class="text-center">
+                <th>ID</th>
+                <th>NOMBRE</th>
+                <th>DESCRIPCIÓN</th>
+                <th>TIEMPO</th>
+                <th>COSTO</th>
+                <th>ESTADO</th>
+                <th width="280px">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($servicios as $servicio)
+            <tr class="text-center align-middle">
+                <td>{{ $servicio->id_servicios }}</td>
+                <td>{{ $servicio->nombre }}</td>
+                <td>{{ $servicio->descripcion }}</td>
+                <td>{{ $servicio->tiempo }} hrs</td>
+                <td>${{ number_format($servicio->costo, 2) }}</td>
+                <td>
+                    <span class="badge {{ $servicio->estado ? 'bg-success' : 'bg-danger' }}">
+                        {{ $servicio->estado ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ url('/catalogos/servicios/actualizar/'.$servicio->id_servicios) }}" class="btn btn-danger">
+                            <i class="bi bi-pencil-fill"></i> Actualizar
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
-
-<table class="table" id="maintable">
-<thead>
-    <tr>
-        <th scope="col">ID</th>
-        <th scope="col">NOMBRE</th>
-        <th scope="col">DESCRIPCION</th>
-        <th scope="col">TIEMPO (HORAS)</th>
-        <th scope="col">COSTO</th>
-        <th scope="col">ACCIONES</th>
-    </tr>
-</thead>
-<tbody>
-@foreach($servicios as $servicio)
-    <tr>
-        <td class="text-center">{{$servicio->id_servicios}}</td>
-        <td class="text-center">{{$servicio->nombre}}</td>
-        <td class="text-center">{{$servicio->descripcion}}</td>
-        <td class="text-center">
-            @php
-                $time = strtotime($servicio->tiempo) - strtotime('TODAY');
-                $hours = number_format($time / 3600, 1);
-                echo $hours;
-            @endphp
-        </td>
-        <td class="text-center">{{$servicio->costo}}</td>
-        <td class="text-center">
-            <a class="btn btn-primary" href="{{ url('/catalogos/servicios/actualizar/' . $servicio->id_servicios) }}">Actualizar</a>
-        </td>
-    </tr>
-@endforeach
-</tbody>
-</table>
 @endsection

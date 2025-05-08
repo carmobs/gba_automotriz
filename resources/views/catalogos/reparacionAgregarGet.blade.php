@@ -5,41 +5,34 @@
 @endcomponent
 
 <div class="container">
-    <h1 class="my-4">Nueva Reparación</h1>
-    
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
+    <h2>Agregar Reparación</h2>
     <form method="POST" action="{{ url('/catalogos/reparacion/agregar') }}">
         @csrf
-        @if(session('debug'))
-            <div class="alert alert-info">
-                Debug Info: {{ session('debug') }}
-            </div>
-        @endif
-
-        <!-- Selección de Vehículo -->
         <div class="mb-3">
-            <label for="id_vehiculos" class="form-label">Vehículo del Cliente *</label>
-            <select class="form-select" id="id_vehiculos" name="id_vehiculos" required>
-                <option value="">Seleccione un vehículo</option>
-                @foreach($vehiculos as $vehiculo)
-                    <option value="{{ $vehiculo->id_vehiculos }}" 
-                        {{ old('id_vehiculos') == $vehiculo->id_vehiculos ? 'selected' : '' }}>
-                        {{ $vehiculo->cliente->nombre }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }} ({{ $vehiculo->año }})
+            <label for="id_citas" class="form-label">Seleccionar Cita</label>
+            <select class="form-control" id="id_citas" name="id_citas">
+                <option value="">Sin cita previa</option>
+                @foreach($citas as $cita)
+                    <option value="{{ $cita->id_citas }}" 
+                            data-vehiculo="{{ $cita->id_vehiculos }}">
+                        {{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }} - 
+                        {{ $cita->vehiculo->cliente->nombre }} - 
+                        {{ date('d/m/Y', strtotime($cita->fecha_cita)) }}
                     </option>
                 @endforeach
             </select>
-            @error('id_vehiculos')
-                <div class="text-danger">{{ $message }}</div>
-            @enderror
+        </div>
+
+        <div class="mb-3">
+            <label for="id_vehiculos" class="form-label">Vehículo</label>
+            <select class="form-control" id="id_vehiculos" name="id_vehiculos" required>
+                @foreach($citas as $cita)
+                    <option value="{{ $cita->vehiculo->id_vehiculos }}">
+                        {{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }} - 
+                        {{ $cita->vehiculo->cliente->nombre }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
         <!-- Selección de Empleado -->
@@ -80,4 +73,16 @@
         <button type="submit" class="btn btn-primary">Guardar Reparación</button>
     </form>
 </div>
+
+<script>
+document.getElementById('id_citas').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const vehiculoId = selectedOption.getAttribute('data-vehiculo');
+    const vehiculoSelect = document.getElementById('id_vehiculos');
+    
+    if(vehiculoId) {
+        vehiculoSelect.value = vehiculoId;
+    }
+});
+</script>
 @endsection

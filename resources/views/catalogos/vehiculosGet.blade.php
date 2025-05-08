@@ -3,44 +3,48 @@
 @component("components.breadcrumbs",["breadcrumbs"=>$breadcrumbs])
 @endcomponent
 
-<div class="row my-4">
-    <div class="col">
-        <h1>Vehiculos</h1>
+<div class="container mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Vehículos</h1>
+        <a href="{{ url('/catalogos/vehiculos/agregar') }}" class="btn btn-danger">Agregar</a>
     </div>
-    <div class="col-auto titlebar-commands">
-        <a class = "btn btn-primary" href="{{url('/catalogos/vehiculos/agregar')}}">Agregar</a>
-    </div>
+    
+    <table class="table">
+        <thead class="bg-light">
+            <tr class="text-center">
+                <th>ID</th>
+                <th>CLIENTE</th>
+                <th>MARCA</th>
+                <th>MODELO</th>
+                <th>AÑO</th>
+                <th>ESTADO</th>
+                <th width="280px">ACCIONES</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($vehiculos as $vehiculo)
+            <tr class="text-center align-middle">
+                <td>{{ $vehiculo->id_vehiculos }}</td>
+                <td>{{ $vehiculo->cliente_nombre }}</td>
+                <td>{{ $vehiculo->marca }}</td>
+                <td>{{ $vehiculo->modelo }}</td>
+                <td>{{ $vehiculo->año }}</td>
+                <td>
+                    <span class="badge {{ $vehiculo->estado ? 'bg-success' : 'bg-danger' }}">
+                        {{ $vehiculo->estado ? 'Activo' : 'Inactivo' }}
+                    </span>
+                </td>
+                <td>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a href="{{ url('/catalogos/vehiculos/actualizar/'.$vehiculo->id_vehiculos) }}" class="btn btn-danger d-flex align-items-center gap-1">
+                            <i class="bi bi-pencil-fill"></i>
+                            <span>Actualizar</span>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
 </div>
-
-<table class="table" id="maintable">
-<thead>
-    <tr>
-        <th scope="col">ID</th>
-        <th scope="col">CLIENTE</th>
-        <th scope="col">MARCA</th>
-        <th scope="col">MODELO</th>
-        <th scope="col">AÑO</th>
-        <th scope="col">DETALLE DEL VEHICULO</th>
-        <th scope="col">ACCIONES</th>
-    </tr>
-</thead>
-<tbody>
-@foreach($vehiculos as $vehiculo)
-    <tr>
-        <td class="text-center">{{$vehiculo->id_vehiculos}}</td>
-        <td class="text-center">{{$vehiculo->cliente_nombre}}</td>
-        <td class="text-center">{{$vehiculo->marca}}</td>
-        <td class="text-center">{{$vehiculo->modelo}}</td>
-        <td class="text-center">{{$vehiculo->año}}</td>
-        <td class="text-center">{{$vehiculo->detalles_vehiculo}}</td>
-        <td class="text-center">
-            <a class="btn btn-primary" href="{{ url('/catalogos/vehiculos/actualizar/' . $vehiculo->id_vehiculos) }}">Actualizar</a>
-        </td>
-    </tr>
-@endforeach
-</tbody>
-</table>
-<script>
-
-</script>
 @endsection
