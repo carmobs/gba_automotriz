@@ -34,9 +34,9 @@
         <td class="text-center">{{ $orden->cantidad }}</td>
         <td class="text-center">{{ $orden->estado }}</td>
         <td class="text-center">
-            <a class="btn btn-primary" href="{{ url('/catalogos/orden_reparacion/actualizar') }}">Actualizar</a>
-            @component('components.delete-button', ['route' => 'orden_reparacion.destroy', 'id' => $orden->id_detalle_reparacion])
-            @endcomponent
+            @if(!$isPagada)
+                <a class="btn btn-primary" href="{{ route('orden_reparacion.update.get', $orden->id_detalle_reparacion) }}">Actualizar</a>
+            @endif
         </td>
     </tr>
 @endforeach

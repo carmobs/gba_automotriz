@@ -33,9 +33,7 @@
             <td class="text-center">{{ \Carbon\Carbon::parse($cita->hora_cita)->format('H:i') }}</td>
             <td class="text-center">{{ $cita->estado }}</td>
             <td class="text-center">
-                <a href="{{ route('citas.update.get', $cita->id_citas) }}" class="btn btn-primary">Actualizar</a>
-                @component('components.delete-button', ['route' => 'citas.destroy', 'id' => $cita->id_citas])
-                @endcomponent
+                <a class="btn btn-primary" href="{{ url('/catalogos/citas/actualizar/' . $cita->id_citas) }}">Actualizar</a>
             </td>
         </tr>
         @endforeach

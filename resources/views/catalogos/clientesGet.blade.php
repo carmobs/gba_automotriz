@@ -29,8 +29,6 @@
         <td class="text-center">{{$cliente->telefono}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{ url('/catalogos/clientes/actualizar/' . $cliente->id_clientes) }}">Actualizar</a>
-            @component('components.delete-button', ['route' => 'clientes.destroy', 'id' => $cliente->id_clientes])
-            @endcomponent
         </td>
     </tr>
 @endforeach

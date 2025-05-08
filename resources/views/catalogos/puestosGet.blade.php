@@ -30,9 +30,7 @@
             <td class="text-center">{{ $puesto->descripcion }}</td>
             <td class="text-center">{{ $puesto->sueldo }}</td>
             <td class="text-center">
-                <a class="btn btn-primary" href="{{ route('puestos.update.get', $puesto->id_puestos) }}">Actualizar</a>
-                @component('components.delete-button', ['route' => 'puestos.destroy', 'id' => $puesto->id_puestos])
-                @endcomponent
+                <a class="btn btn-primary" href="{{ url('/catalogos/puestos/actualizar/' . $puesto->id_puestos) }}">Actualizar</a>
             </td>
         </tr>
         @endforeach

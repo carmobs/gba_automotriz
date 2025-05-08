@@ -35,8 +35,6 @@
         <td class="text-center">{{$vehiculo->detalles_vehiculo}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{ url('/catalogos/vehiculos/actualizar/' . $vehiculo->id_vehiculos) }}">Actualizar</a>
-            @component('components.delete-button', ['route' => 'vehiculos.destroy', 'id' => $vehiculo->id_vehiculos])
-            @endcomponent
         </td>
     </tr>
 @endforeach

@@ -25,19 +25,19 @@
             </div>
         @endif
 
-        <!-- Selección de Cliente -->
+        <!-- Selección de Vehículo -->
         <div class="mb-3">
-            <label for="id_clientes" class="form-label">Cliente *</label>
-            <select class="form-select" id="id_clientes" name="id_clientes" required>
-                <option value="">Seleccione un cliente</option>
-                @foreach($clientes as $cliente)
-                    <option value="{{ $cliente->id_clientes }}" 
-                        {{ old('id_clientes') == $cliente->id_clientes ? 'selected' : '' }}>
-                        {{ $cliente->nombre }} (Tel: {{ $cliente->telefono }})
+            <label for="id_vehiculos" class="form-label">Vehículo del Cliente *</label>
+            <select class="form-select" id="id_vehiculos" name="id_vehiculos" required>
+                <option value="">Seleccione un vehículo</option>
+                @foreach($vehiculos as $vehiculo)
+                    <option value="{{ $vehiculo->id_vehiculos }}" 
+                        {{ old('id_vehiculos') == $vehiculo->id_vehiculos ? 'selected' : '' }}>
+                        {{ $vehiculo->cliente->nombre }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }} ({{ $vehiculo->año }})
                     </option>
                 @endforeach
             </select>
-            @error('id_clientes')
+            @error('id_vehiculos')
                 <div class="text-danger">{{ $message }}</div>
             @enderror
         </div>

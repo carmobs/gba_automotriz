@@ -26,8 +26,8 @@
         </div>
         <div class="col">
             <div class="form-group">
-                <label for="tiempo">Tiempo</label>
-                <input type="time" class="form-control" id="tiempo" name="tiempo" placeholder="Agregar tiempo" required>
+                <label for="tiempo">Tiempo (horas)</label>
+                <input type="number" min="0" step="0.5" class="form-control" id="tiempo" name="tiempo" placeholder="Ejemplo: 2.5" required>
             </div>
         </div>
         <div class="col">

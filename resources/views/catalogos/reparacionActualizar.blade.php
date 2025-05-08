@@ -22,20 +22,20 @@
             <form method="POST" action="{{ route('reparacion.update.post', $reparacion->id_reparacion) }}">
                 @csrf
                 <div class="form-group mb-3">
-                    <label for="id_clientes">Cliente</label>
-                    <select class="form-control @error('id_clientes') is-invalid @enderror" 
-                            id="id_clientes" 
-                            name="id_clientes" 
+                    <label for="id_vehiculos">Vehículo del Cliente</label>
+                    <select class="form-control @error('id_vehiculos') is-invalid @enderror" 
+                            id="id_vehiculos" 
+                            name="id_vehiculos" 
                             required>
-                        <option value="">Seleccione un cliente...</option>
-                        @foreach($clientes as $cliente)
-                            <option value="{{ $cliente->id_clientes }}" 
-                                {{ old('id_clientes', $reparacion->id_clientes) == $cliente->id_clientes ? 'selected' : '' }}>
-                                {{ $cliente->nombre }}
+                        <option value="">Seleccione un vehículo...</option>
+                        @foreach($vehiculos as $vehiculo)
+                            <option value="{{ $vehiculo->id_vehiculos }}" 
+                                {{ old('id_vehiculos', $reparacion->id_vehiculos) == $vehiculo->id_vehiculos ? 'selected' : '' }}>
+                                {{ $vehiculo->cliente->nombre }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }} ({{ $vehiculo->año }})
                             </option>
                         @endforeach
                     </select>
-                    @error('id_clientes')
+                    @error('id_vehiculos')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>

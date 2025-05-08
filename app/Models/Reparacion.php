@@ -11,17 +11,17 @@ class Reparacion extends Model
 
     protected $table = 'reparacion';
     protected $primaryKey = 'id_reparacion';
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'int';
-    protected $id_empleaodos;
-    protected $id_clientes;
+    protected $id_empleados;
+    protected $id_vehiculos;
     protected $fecha_reparacion;
     protected $estado;
-    protected $fillable = ['id_empleado', 'id_cliente', 'fecha_reparacion', 'estado'];
+    protected $fillable = ['id_empleados', 'id_vehiculos', 'fecha_reparacion', 'estado'];
     public $timestamps = false;
 
-    public function cliente()
+    public function vehiculo()
     {
-        return $this->belongsTo(Clientes::class, 'id_cliente', 'id_clientes');
+        return $this->belongsTo(Vehiculos::class, 'id_vehiculos', 'id_vehiculos');
     }
 }

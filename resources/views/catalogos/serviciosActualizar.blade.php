@@ -44,8 +44,8 @@
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="tiempo">Tiempo</label>
-                        <input type="time" class="form-control" id="tiempo" name="tiempo" value="{{ $servicio->tiempo }}" required>
+                        <label for="tiempo">Tiempo (horas)</label>
+                        <input type="number" min="0" step="0.5" class="form-control" id="tiempo" name="tiempo" value="{{ number_format((strtotime($servicio->tiempo) - strtotime('TODAY')) / 3600, 1) }}" required>
                     </div>
                 </div>
                 <div class="col">
