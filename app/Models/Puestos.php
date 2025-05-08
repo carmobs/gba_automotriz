@@ -14,6 +14,6 @@ class Puestos extends Model
     public $incrementing = true; // Cambiado a true porque normalmente las claves primarias son autoincrementales
     protected $keyType = 'int'; // Tipo de clave primaria
 
-    protected $fillable = ['nombre_puesto', 'descripcion', 'sueldo']; // Campos que se pueden asignar masivamente
+    protected $fillable = ['id_puestos', 'nombre_puesto', 'descripcion', 'sueldo', 'estado']; // Added 'estado'
     public $timestamps = false; // Desactiva timestamps si no existen en la tabla
 }

@@ -13,7 +13,7 @@ class Clientes extends Model
     protected $primaryKey = 'id_clientes';
     public $incrementing = true;
     protected $keyType = 'int';
-    protected $fillable = ['nombre', 'telefono'];
+    protected $fillable = ['nombre', 'telefono', 'estado'];
     public $timestamps = false;
 
     // Relación con vehículos

@@ -48,6 +48,14 @@
                 </div>
             </div>
 
+            <div class="form-group mb-3">
+                <label for="estado">Estado</label>
+                <select class="form-control" id="estado" name="estado" required>
+                    <option value="activo" {{ old('estado', $cliente->estado) == 'activo' ? 'selected' : '' }}>Activo</option>
+                    <option value="inactivo" {{ old('estado', $cliente->estado) == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
+                </select>
+            </div>
+
             <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
                 <button type="submit" class="btn btn-primary me-md-2" id="submitBtn">Actualizar</button>
                 <a href="{{ route('clientes.get') }}" class="btn btn-secondary">Cancelar</a>

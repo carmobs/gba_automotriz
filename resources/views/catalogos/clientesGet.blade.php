@@ -18,6 +18,7 @@
         <th scope="col">ID</th>
         <th scope="col">NOMBRE</th>
         <th scope="col">TELEFONO</th>
+        <th scope="col">ESTADO</th>
         <th scope="col">ACCIONES</th>
     </tr>
 </thead>
@@ -27,6 +28,7 @@
         <td class="text-center">{{$cliente->id_clientes}}</td>
         <td class="text-center">{{$cliente->nombre}}</td>
         <td class="text-center">{{$cliente->telefono}}</td>
+        <td class="text-center">{{$cliente->estado}}</td>
         <td class="text-center">
             <a class="btn btn-primary" href="{{ url('/catalogos/clientes/actualizar/' . $cliente->id_clientes) }}">Actualizar</a>
             @component('components.delete-button', ['route' => 'clientes.destroy', 'id' => $cliente->id_clientes])

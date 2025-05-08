@@ -17,7 +17,6 @@
     <!-- importar librerías de estilos y javascript de datatables para manipular tablas desde el
     navegador del usuario-->
     <link href={{ URL::asset('DataTables/datatables.min.css')}} rel="stylesheet"/>
-    <script src={{ URL::asset('DataTables/datatables.min.js')}}></script>
     <link href={{URL::asset("assets/style.css")}} rel="stylesheet" />
 </head>
 <body>
@@ -27,6 +26,11 @@
         @section("content")
         @show
     </div>
+
+    <!-- Asegúrate de que jQuery se cargue antes de DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

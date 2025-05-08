@@ -9,7 +9,7 @@
     </div>
     <div class="col"></div>
 </div>
-<form method="post" action="{{url('/catalogos/servicios/agregar')}}">
+<form method="POST" action="{{ route('servicios.store') }}">
     @csrf
     <div class="row my-4">
         <div class="col">
@@ -33,13 +33,21 @@
         <div class="col">
             <div class="form-group">
                 <label for="costo">Costo</label>
-                <input type="text" class="form-control" id="costo" name="costo" placeholder="Agregar costo" required>
+                <input type="number" step="0.01" class="form-control" id="costo" name="costo" placeholder="Agregar costo" required>
+            </div>
+        </div>
+        <div class="col">
+            <div class="form-group">
+                <label for="estado">Estado</label>
+                <select class="form-control" id="estado" name="estado" required>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                </select>
             </div>
         </div>
     </div>
     <div class="row my-4">
         <div class="col">
-            <br>
             <button type="submit" class="btn btn-primary">Guardar</button>
         </div>
     </div>
