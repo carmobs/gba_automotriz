@@ -91,10 +91,19 @@
 
 <div class="row mt-3">
     <div class="col">
-        @if(!$isPagada && count($ordenes) > 0)
-            <a href="{{ url('/catalogos/pagos/agregar?id_vehiculo=' . $infoBase->id_vehiculos . '&monto=' . $ordenes->sum('total')) }}" class="btn btn-success">Realizar Pago</a>
-        @endif
-        <a href="{{ url('/catalogos/reparacion') }}" class="btn btn-secondary">Volver a Reparaciones</a>
+        <div class="d-flex gap-2">
+            @if(!$isPagada && count($ordenes) > 0)
+                <a href="{{ url('/catalogos/pagos/agregar?id_vehiculo=' . $infoBase->id_vehiculos) }}" 
+                   class="btn btn-success {{ $ordenes->where('estado', 0)->count() > 0 ? 'disabled' : '' }}" 
+                   id="btnPago">
+                    Realizar Pago
+                </a>
+            @endif
+            <a href="{{ url('/catalogos/reparacion') }}" class="btn btn-secondary">Volver a Reparaciones</a>
+        </div>
+        <small class="text-muted d-block" id="msgPago">
+            {{ $ordenes->where('estado', 0)->count() > 0 ? 'Complete todos los servicios antes de realizar el pago' : '' }}
+        </small>
     </div>
 </div>
 
@@ -105,6 +114,24 @@
                 "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
             }
         });
+
+        // Función para verificar si todos los servicios están completados
+        function checkAllServicesCompleted() {
+            const pendingServices = {{ $ordenes->where('estado', 0)->count() }};
+            const btnPago = $('#btnPago');
+            const msgPago = $('#msgPago');
+
+            if (pendingServices > 0) {
+                btnPago.addClass('disabled');
+                msgPago.text('Complete todos los servicios antes de realizar el pago');
+            } else {
+                btnPago.removeClass('disabled');
+                msgPago.text('');
+            }
+        }
+
+        // Verificar estado inicial
+        checkAllServicesCompleted();
     });
 </script>
 @endsection

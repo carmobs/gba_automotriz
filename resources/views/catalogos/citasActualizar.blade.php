@@ -10,9 +10,14 @@
             <label for="id_vehiculos" class="form-label">Vehículo</label>
             <select class="form-control" id="id_vehiculos" name="id_vehiculos" required>
                 @foreach($vehiculos as $vehiculo)
-                    <option value="{{ $vehiculo->id_vehiculos }}" {{ $cita->id_vehiculos == $vehiculo->id_vehiculos ? 'selected' : '' }}>
-                        {{ $vehiculo->marca }} {{ $vehiculo->modelo }} - {{ $vehiculo->cliente->nombre }}
-                    </option>
+                    @if($vehiculo->estado || $cita->id_vehiculos == $vehiculo->id_vehiculos)
+                        <option value="{{ $vehiculo->id_vehiculos }}" 
+                                {{ $cita->id_vehiculos == $vehiculo->id_vehiculos ? 'selected' : '' }}
+                                {{ !$vehiculo->estado ? 'disabled' : '' }}>
+                            {{ $vehiculo->marca }} {{ $vehiculo->modelo }} - {{ $vehiculo->cliente->nombre }}
+                            {{ !$vehiculo->estado ? '(Inactivo)' : '' }}
+                        </option>
+                    @endif
                 @endforeach
             </select>
         </div>

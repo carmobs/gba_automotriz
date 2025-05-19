@@ -33,13 +33,18 @@
                 <div class="col">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" name="nombre" value="{{ old('nombre') }}" required>
+                        <input type="text" class="form-control" id="nombre" name="nombre" 
+                            value="{{ old('nombre') }}" required
+                            pattern="[A-Za-záéíóúÁÉÍÓÚñÑ\s]+" 
+                            title="Solo se permiten letras y espacios">
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
                         <label for="fecha">Fecha Ingreso</label>
-                        <input type="date" class="form-control" id="fecha" name="fecha" value="{{ old('fecha', date('Y-m-d')) }}" required>
+                        <input type="date" class="form-control" id="fecha" name="fecha" 
+                            value="{{ old('fecha', date('Y-m-d')) }}" required
+                            max="{{ date('Y-m-d') }}">
                     </div>
                 </div>
                 <div class="col">
@@ -59,4 +64,17 @@
         </form>
     </div>
 </div>
+
+<script>
+document.getElementById('nombre').addEventListener('input', function(e) {
+    if(/[0-9]/.test(this.value)) {
+        this.value = this.value.replace(/[0-9]/g, '');
+    }
+});
+document.getElementById('nombre').addEventListener('keypress', function(e) {
+    if(/[0-9]/.test(e.key)) {
+        e.preventDefault();
+    }
+});
+</script>
 @endsection

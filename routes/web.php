@@ -68,6 +68,7 @@ Route::prefix('/catalogos/orden_reparacion')->group(function () {
     Route::get('/actualizar/{id}', [CatalogosController::class, 'ordenReparacionActualizarGet'])->name('orden_reparacion.update.get');
     Route::post('/actualizar/{id}', [CatalogosController::class, 'ordenReparacionActualizarPost'])->name('orden_reparacion.update.post');
     Route::delete('/{id}', [CatalogosController::class, 'ordenReparacionEliminar'])->name('orden_reparacion.destroy');
+    Route::post('/update-estado', [CatalogosController::class, 'ordenReparacionUpdateEstado'])->name('orden_reparacion.update.estado');
 });
 
 // Rutas para Pagos
@@ -78,6 +79,7 @@ Route::prefix('/catalogos/pagos')->group(function () {
     Route::get('/actualizar/{id}', [CatalogosController::class, 'pagosActualizarGet'])->name('pagos.update.get');
     Route::post('/actualizar/{id}', [CatalogosController::class, 'pagosActualizarPost'])->name('pagos.update.post');
     Route::delete('/{id}', [CatalogosController::class, 'pagosEliminar'])->name('pagos.destroy');
+    Route::get('/getReparacionInfo/{id_vehiculo}', [CatalogosController::class, 'getReparacionInfo']);
 });
 
 // Rutas para Citas

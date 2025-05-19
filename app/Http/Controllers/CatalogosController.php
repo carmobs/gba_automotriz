@@ -328,7 +328,7 @@ class CatalogosController extends Controller
     public function empleadoPuestosAgregarGet($id): View
     {
         $empleado = Empleados::findOrFail($id);
-        $puestosDisponibles = Puestos::all();
+        $puestosDisponibles = Puestos::where('estado', 1)->get(); // Solo puestos activos
 
         return view('catalogos.empleadoPuestosAgregarGet', [
             'empleado' => $empleado,
@@ -345,19 +345,19 @@ class CatalogosController extends Controller
     public function empleadoPuestosAgregarPost(Request $request, $id): RedirectResponse
     {
         $validated = $request->validate([
-            'id_puestos' => 'required|exists:puestos,id_puestos', // Cambiado de 'id_puesto' a 'id_puestos'
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio'
+            'id_puestos' => 'required|exists:puestos,id_puestos',
+            'fecha_inicio' => 'required|date'
         ]);
 
         Detalle_Puesto::create([
             'id_empleados' => $id,
             'id_puestos' => $validated['id_puestos'],
             'fecha_inicio' => $validated['fecha_inicio'],
-            'fecha_fin' => $validated['fecha_fin']
+            'fecha_fin' => null // Explícitamente establecer como null
         ]);
 
-        return redirect()->route('empleados.puestos.get', $id)->with('success', 'Puesto agregado correctamente.');
+        return redirect()->route('empleados.puestos.get', $id)
+            ->with('success', 'Puesto agregado correctamente.');
     }
 
     public function vehiculosGet():View
@@ -478,6 +478,7 @@ class CatalogosController extends Controller
                 'vehiculos.modelo',
                 'citas.detalles_vehiculo'
             )
+            ->orderBy('reparacion.id_reparacion', 'asc') // Cambiar a orden ascendente
             ->get();
 
         return view('catalogos/reparacionGet', [
@@ -531,12 +532,20 @@ class CatalogosController extends Controller
         ]);
 
         try {
-            $reparacion = new Reparacion($validated);
-            $reparacion->save();
+            DB::transaction(function() use ($validated) {
+                // Crear la reparación
+                $reparacion = new Reparacion($validated);
+                $reparacion->save();
+
+                // Si hay una cita asociada, actualizar su estado a "Confirmada"
+                if (!empty($validated['id_citas'])) {
+                    Citas::where('id_citas', $validated['id_citas'])
+                        ->update(['estado' => 'Confirmada']);
+                }
+            });
 
             return redirect('/catalogos/reparacion')->with([
-                'success' => 'Reparación registrada!',
-                'reparacion_id' => $reparacion->id_reparacion
+                'success' => 'Reparación registrada y cita actualizada!'
             ]);
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error al guardar: '.$e->getMessage());
@@ -555,11 +564,18 @@ class CatalogosController extends Controller
         }
     }
 
-    public function reparacionActualizarGet($id): View
+    public function reparacionActualizarGet($id): View|RedirectResponse
     {
         $reparacion = Reparacion::findOrFail($id);
-        $vehiculos = Vehiculos::with('cliente')->get();
         
+        // Si la reparación está completada, redirigir con mensaje
+        if ($reparacion->estado === 'Completada') {
+            return redirect()->route('reparacion.get')
+                ->with('error', 'No se puede modificar una reparación completada');
+        }
+
+        // Si la reparación está en proceso, continuar con el código existente
+        $vehiculos = Vehiculos::with('cliente')->get();
         $empleados = Empleados::join('detalle_puesto', 'empleados.id_empleados', '=', 'detalle_puesto.id_empleados')
             ->join('puestos', 'detalle_puesto.id_puestos', '=', 'puestos.id_puestos')
             ->where('puestos.nombre_puesto', 'LIKE', '%MECANICO%')
@@ -599,6 +615,13 @@ class CatalogosController extends Controller
 
     public function reparacionActualizarPost(Request $request, $id): RedirectResponse
     {
+        $reparacion = Reparacion::findOrFail($id);
+        
+        // Verificar si la reparación ya está completada
+        if ($reparacion->estado === 'Completada') {
+            return back()->with('error', 'No se puede modificar una reparación completada');
+        }
+
         $validated = $request->validate([
             'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
             'id_empleados' => 'required|exists:empleados,id_empleados',
@@ -608,8 +631,24 @@ class CatalogosController extends Controller
         ]);
 
         try {
-            $reparacion = Reparacion::findOrFail($id);
-            $reparacion->update($validated);
+            DB::transaction(function() use ($validated, $id, $reparacion) {
+                // Si cambió la cita, actualizar estados
+                if ($reparacion->id_citas != $validated['id_citas']) {
+                    // Si había una cita anterior, resetear su estado
+                    if ($reparacion->id_citas) {
+                        Citas::where('id_citas', $reparacion->id_citas)
+                            ->update(['estado' => 'Pendiente']);
+                    }
+                    
+                    // Si hay nueva cita, actualizarla a confirmada
+                    if ($validated['id_citas']) {
+                        Citas::where('id_citas', $validated['id_citas'])
+                            ->update(['estado' => 'Confirmada']);
+                    }
+                }
+
+                $reparacion->update($validated);
+            });
 
             return redirect()->route('reparacion.get')
                 ->with('success', 'Reparación actualizada correctamente');
@@ -617,6 +656,45 @@ class CatalogosController extends Controller
             return back()->withInput()
                 ->with('error', 'Error al actualizar la reparación: ' . $e->getMessage());
         }
+    }
+
+    public function getReparacionInfo($id_vehiculo)
+    {
+        $reparacion = Reparacion::where('id_vehiculos', $id_vehiculo)
+            ->where('estado', '!=', 'Cancelada')
+            ->whereNotIn('id_reparacion', function($query) {
+                $query->select('id_reparacion')->from('pagos');
+            })
+            ->with(['ordenes' => function($query) {
+                $query->with('servicio');
+            }])
+            ->orderBy('fecha_reparacion', 'desc')
+            ->first();
+
+        if (!$reparacion) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'No hay reparaciones pendientes de pago para este vehículo'
+            ]);
+        }
+
+        // Calcular el total de la reparación
+        $total = $reparacion->ordenes->sum(function($orden) {
+            return $orden->cantidad * $orden->costo_unitario_servicio;
+        });
+
+        // Verificar si todos los servicios están completados
+        $pendingServices = $reparacion->ordenes->where('estado', 0)->count();
+        $allServicesCompleted = $pendingServices === 0;
+
+        return response()->json([
+            'success' => true,
+            'reparacion' => $reparacion,
+            'total' => $total,
+            'serviciosCompletados' => $allServicesCompleted,
+            'serviciosPendientes' => $pendingServices,
+            'puedeRealizarPago' => $allServicesCompleted
+        ]);
     }
 
     public function pagosGet(): View
@@ -641,12 +719,23 @@ class CatalogosController extends Controller
     }
     public function pagosAgregarGet(): View
     {
-        $clientes = Vehiculos::join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+        $vehiculos = Vehiculos::join('clientes', 'clientes.id_clientes', '=', 'vehiculos.id_clientes')
+            ->join('reparacion', 'reparacion.id_vehiculos', '=', 'vehiculos.id_vehiculos')
+            ->where('reparacion.estado', '!=', 'Cancelada')
+            ->whereNotIn('reparacion.id_reparacion', function($query) {
+                $query->select('id_reparacion')->from('pagos');
+            })
             ->select(
                 'vehiculos.*',
-                'clientes.nombre as cliente_nombre'
+                'clientes.nombre as cliente_nombre',
+                'reparacion.fecha_reparacion'
             )
+            ->distinct()
+            ->orderBy('reparacion.fecha_reparacion', 'desc')
             ->get();
+
+        // Obtener el id_vehiculo de la URL si existe
+        $selected_vehiculo = request('id_vehiculo');
         
         return view('catalogos/pagosAgregarGet', [
             'breadcrumbs' => [
@@ -654,50 +743,63 @@ class CatalogosController extends Controller
                 'Pagos' => url('/catalogos/pagos'),
                 'Agregar Pago' => url('/catalogos/pagos/agregar')
             ],
-            'clientes' => $clientes
+            'vehiculos' => $vehiculos,
+            'selected_vehiculo' => $selected_vehiculo
         ]);
     }
 
-    // Procesar el formulario
     public function pagosAgregarPost(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'id_vehiculo' => 'required|exists:vehiculos,id_vehiculos',
-            'fecha' => 'required|date',
+            'fecha' => [
+                'required',
+                'date',
+                'before_or_equal:today'
+            ],
             'monto' => 'required|numeric|min:0|decimal:0,2'
         ]);
 
         try {
-            // Obtener la reparación más reciente del vehículo que no esté pagada
-            $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])
-                ->whereNotIn('id_reparacion', function($query) {
-                    $query->select('id_reparacion')
-                          ->from('pagos');
-                })
-                ->orderBy('fecha_reparacion', 'desc')
-                ->first();
+            DB::transaction(function() use ($validated) {
+                $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])
+                    ->whereNotIn('id_reparacion', function($query) {
+                        $query->select('id_reparacion')->from('pagos');
+                    })
+                    ->with('ordenes')
+                    ->firstOrFail();
 
-            if (!$reparacion) {
-                return back()->withInput()->with('error', 'No se encontró una reparación pendiente de pago para este vehículo.');
-            }
+                // Verificar que todos los servicios estén completados
+                if ($reparacion->ordenes->where('estado', 0)->count() > 0) {
+                    throw new \Exception('No se puede procesar el pago hasta que todos los servicios estén completados.');
+                }
 
-            // Crear el pago
-            Pagos::create([
-                'id_reparacion' => $reparacion->id_reparacion,
-                'fecha' => $validated['fecha'],
-                'monto' => $validated['monto']
-            ]);
+                // Calcular el total
+                $total = $reparacion->ordenes->sum(function($orden) {
+                    return $orden->cantidad * $orden->costo_unitario_servicio;
+                });
 
-            // Actualizar el estado de la reparación y sus órdenes
-            DB::transaction(function() use ($reparacion) {
-                Orden_Reparacion::where('id_reparacion', $reparacion->id_reparacion)
-                    ->update(['estado' => Orden_Reparacion::ESTADO_COMPLETADO]);
+                // Verificar que el monto coincida
+                if (abs($validated['monto'] - $total) > 0.01) {
+                    throw new \Exception(
+                        "El monto del pago ($" . number_format($validated['monto'], 2) . 
+                        ") debe coincidir con el total de la reparación ($" . number_format($total, 2) . ")"
+                    );
+                }
 
+                // Crear el pago
+                $pago = new Pagos([
+                    'id_reparacion' => $reparacion->id_reparacion,
+                    'fecha' => $validated['fecha'],
+                    'monto' => $validated['monto']
+                ]);
+                $pago->save();
+
+                // Actualizar el estado de la reparación a Completada
                 $reparacion->update(['estado' => 'Completada']);
             });
 
-            return redirect('/catalogos/pagos')->with('success', 'Pago registrado correctamente');
-            
+            return redirect('/catalogos/pagos')->with('success', 'Pago registrado correctamente y reparación marcada como completada');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error al registrar pago: '.$e->getMessage());
         }
@@ -907,6 +1009,38 @@ class CatalogosController extends Controller
             ->with('success', 'Orden de reparación actualizada correctamente.');
     }
 
+    public function ordenReparacionUpdateEstado(Request $request)
+    {
+        try {
+            // Validar entrada
+            $validated = $request->validate([
+                'id' => 'required|exists:orden_reparacion,id_detalle_reparacion',
+                'estado' => 'required|in:0,1'
+            ]);
+
+            // Encontrar y actualizar directamente
+            $updated = DB::table('orden_reparacion')
+                ->where('id_detalle_reparacion', $validated['id'])
+                ->update(['estado' => $validated['estado']]);
+
+            if (!$updated) {
+                throw new \Exception('No se pudo actualizar el estado');
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado correctamente',
+                'estado' => $validated['estado']
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error actualizando estado: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function citasGet(): View
     {
         $citas = Citas::with('vehiculo')->get();
@@ -922,7 +1056,9 @@ class CatalogosController extends Controller
 
     public function citasAgregarGet(): View
     {
-        $vehiculos = Vehiculos::all();
+        $vehiculos = Vehiculos::with('cliente')
+            ->where('estado', 1) // Solo vehículos activos
+            ->get();
 
         return view('catalogos.citasAgregarGet', [
             'vehiculos' => $vehiculos,
@@ -937,7 +1073,16 @@ class CatalogosController extends Controller
     public function citasAgregarPost(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'id_vehiculos' => 'required|exists:vehiculos,id_vehiculos',
+            'id_vehiculos' => [
+                'required',
+                'exists:vehiculos,id_vehiculos',
+                function ($attribute, $value, $fail) {
+                    $vehiculo = Vehiculos::find($value);
+                    if (!$vehiculo->estado) {
+                        $fail('No se pueden crear citas para vehículos inactivos.');
+                    }
+                },
+            ],
             'fecha_cita' => 'required|date',
             'hora_cita' => 'required|date_format:H:i',
             'estado' => 'required|string|max:100',

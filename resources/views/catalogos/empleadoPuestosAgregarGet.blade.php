@@ -22,11 +22,8 @@
     </div>
     <div class="form-group">
         <label for="fecha_inicio">Fecha Inicio</label>
-        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
-    </div>
-    <div class="form-group">
-        <label for="fecha_fin">Fecha Fin</label>
-        <input type="date" class="form-control" id="fecha_fin" name="fecha_fin">
+        <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" 
+               required max="{{ date('Y-m-d') }}">
     </div>
     <button type="submit" class="btn btn-primary">Guardar</button>
     <a href="{{ route('empleados.puestos.get', $empleado->id_empleados) }}" class="btn btn-secondary">Cancelar</a>

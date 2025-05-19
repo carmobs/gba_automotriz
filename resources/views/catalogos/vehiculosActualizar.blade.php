@@ -10,9 +10,11 @@
             <label for="id_clientes" class="form-label">Cliente</label>
             <select class="form-control" id="id_clientes" name="id_clientes" required>
                 @foreach($clientes as $cliente)
-                    <option value="{{ $cliente->id_clientes }}" {{ $vehiculo->id_clientes == $cliente->id_clientes ? 'selected' : '' }}>
-                        {{ $cliente->nombre }}
-                    </option>
+                    @if($cliente->estado || $vehiculo->id_clientes == $cliente->id_clientes)
+                        <option value="{{ $cliente->id_clientes }}" {{ $vehiculo->id_clientes == $cliente->id_clientes ? 'selected' : '' }}>
+                            {{ $cliente->nombre }}
+                        </option>
+                    @endif
                 @endforeach
             </select>
         </div>
