@@ -93,7 +93,7 @@
     <div class="col">
         <div class="d-flex gap-2">
             @if(!$isPagada && count($ordenes) > 0)
-                <a href="{{ url('/catalogos/pagos/agregar?id_vehiculo=' . $infoBase->id_vehiculos) }}" 
+                <a href="{{ url('/catalogos/pagos/agregar?id_vehiculo=' . $infoBase->id_vehiculos . '&id_reparacion=' . $id_reparacion) }}" 
                    class="btn btn-success {{ $ordenes->where('estado', 0)->count() > 0 ? 'disabled' : '' }}" 
                    id="btnPago">
                     Realizar Pago

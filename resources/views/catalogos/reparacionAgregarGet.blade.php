@@ -9,7 +9,7 @@
     <form method="POST" action="{{ url('/catalogos/reparacion/agregar') }}">
         @csrf
         <div class="mb-3">
-            <label for="id_citas" class="form-label">Seleccionar Cita</label>
+            <label for="id_citas" class="form-label">Seleccionar Cita (Opcional)</label>
             <select class="form-control" id="id_citas" name="id_citas">
                 <option value="">Sin cita previa</option>
                 @foreach($citas as $cita)
@@ -18,18 +18,21 @@
                         {{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }} - 
                         {{ $cita->vehiculo->cliente->nombre }} - 
                         {{ date('d/m/Y', strtotime($cita->fecha_cita)) }}
+                        ({{ $cita->estado }})
                     </option>
                 @endforeach
             </select>
+            <small class="form-text text-muted">Solo se muestran citas pendientes o confirmadas</small>
         </div>
 
         <div class="mb-3">
-            <label for="id_vehiculos" class="form-label">Vehículo</label>
+            <label for="id_vehiculos" class="form-label">Vehículo *</label>
             <select class="form-control" id="id_vehiculos" name="id_vehiculos" required>
-                @foreach($citas as $cita)
-                    <option value="{{ $cita->vehiculo->id_vehiculos }}">
-                        {{ $cita->vehiculo->marca }} {{ $cita->vehiculo->modelo }} - 
-                        {{ $cita->vehiculo->cliente->nombre }}
+                <option value="">Seleccione un vehículo</option>
+                @foreach($vehiculos as $vehiculo)
+                    <option value="{{ $vehiculo->id_vehiculos }}">
+                        {{ $vehiculo->marca }} {{ $vehiculo->modelo }} - 
+                        {{ $vehiculo->cliente->nombre }}
                     </option>
                 @endforeach
             </select>
@@ -81,8 +84,17 @@ document.getElementById('id_citas').addEventListener('change', function() {
     const vehiculoSelect = document.getElementById('id_vehiculos');
     
     if(vehiculoId) {
+        // Si hay una cita seleccionada, seleccionar el vehículo correspondiente
         vehiculoSelect.value = vehiculoId;
+    } else {
+        // Si se deselecciona la cita, limpiar la selección del vehículo
+        vehiculoSelect.value = '';
     }
+});
+
+// Permitir selección manual de vehículo independiente de la cita
+document.getElementById('id_vehiculos').addEventListener('change', function() {
+    // No es necesario hacer nada aquí, solo permitir la selección manual
 });
 </script>
 @endsection

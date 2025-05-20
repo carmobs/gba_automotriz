@@ -501,7 +501,15 @@ class CatalogosController extends Controller
             ->select('empleados.*')
             ->distinct()
             ->get();
+
+        // Obtener todos los vehículos activos
+        $vehiculos = Vehiculos::with('cliente')
+            ->where('estado', 1)
+            ->get();
+            
+        // Obtener citas no canceladas y sin reparación
         $citas = Citas::with(['vehiculo.cliente'])
+            ->where('estado', '!=', 'Cancelada')
             ->whereNotIn('id_citas', function($query) {
                 $query->select('id_citas')
                     ->from('reparacion')
@@ -517,6 +525,7 @@ class CatalogosController extends Controller
             ],
             'clientes' => $clientes,
             'empleados' => $empleados,
+            'vehiculos' => $vehiculos,
             'citas' => $citas
         ]);
     }
@@ -586,6 +595,7 @@ class CatalogosController extends Controller
             ->get();
 
         $citas = Citas::with(['vehiculo.cliente'])
+            ->where('estado', '!=', 'Cancelada') // Excluir citas canceladas
             ->where(function($query) use ($id) {
                 $query->whereNotIn('id_citas', function($subquery) {
                     $subquery->select('id_citas')
@@ -660,32 +670,37 @@ class CatalogosController extends Controller
 
     public function getReparacionInfo($id_vehiculo)
     {
-        $reparacion = Reparacion::where('id_vehiculos', $id_vehiculo)
+        $query = Reparacion::where('id_vehiculos', $id_vehiculo)
             ->where('estado', '!=', 'Cancelada')
             ->whereNotIn('id_reparacion', function($query) {
                 $query->select('id_reparacion')->from('pagos');
-            })
-            ->with(['ordenes' => function($query) {
+            });
+
+        // Si se proporciona un id_reparacion específico en la URL, úsalo
+        if (request('id_reparacion')) {
+            $query->where('id_reparacion', request('id_reparacion'));
+        }
+
+        $reparacion = $query->with(['ordenes' => function($query) {
                 $query->with('servicio');
             }])
-            ->orderBy('fecha_reparacion', 'desc')
             ->first();
 
         if (!$reparacion) {
             return response()->json([
                 'success' => false, 
-                'message' => 'No hay reparaciones pendientes de pago para este vehículo'
+                'message' => 'No se encontró la reparación especificada o ya está pagada'
             ]);
         }
-
-        // Calcular el total de la reparación
-        $total = $reparacion->ordenes->sum(function($orden) {
-            return $orden->cantidad * $orden->costo_unitario_servicio;
-        });
 
         // Verificar si todos los servicios están completados
         $pendingServices = $reparacion->ordenes->where('estado', 0)->count();
         $allServicesCompleted = $pendingServices === 0;
+
+        // Calcular el total
+        $total = $reparacion->ordenes->sum(function($orden) {
+            return $orden->cantidad * $orden->costo_unitario_servicio;
+        });
 
         return response()->json([
             'success' => true,
@@ -728,15 +743,12 @@ class CatalogosController extends Controller
             ->select(
                 'vehiculos.*',
                 'clientes.nombre as cliente_nombre',
-                'reparacion.fecha_reparacion'
+                'reparacion.fecha_reparacion',
+                'reparacion.id_reparacion' // Agregamos el ID de la reparación
             )
-            ->distinct()
             ->orderBy('reparacion.fecha_reparacion', 'desc')
             ->get();
 
-        // Obtener el id_vehiculo de la URL si existe
-        $selected_vehiculo = request('id_vehiculo');
-        
         return view('catalogos/pagosAgregarGet', [
             'breadcrumbs' => [
                 'Inicio' => url('/'),
@@ -744,7 +756,7 @@ class CatalogosController extends Controller
                 'Agregar Pago' => url('/catalogos/pagos/agregar')
             ],
             'vehiculos' => $vehiculos,
-            'selected_vehiculo' => $selected_vehiculo
+            'selected_vehiculo' => request('id_vehiculo')
         ]);
     }
 
@@ -762,12 +774,17 @@ class CatalogosController extends Controller
 
         try {
             DB::transaction(function() use ($validated) {
-                $reparacion = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])
+                $query = Reparacion::where('id_vehiculos', $validated['id_vehiculo'])
                     ->whereNotIn('id_reparacion', function($query) {
                         $query->select('id_reparacion')->from('pagos');
-                    })
-                    ->with('ordenes')
-                    ->firstOrFail();
+                    });
+
+                // Si se proporciona un id_reparacion específico, úsalo
+                if (request('id_reparacion')) {
+                    $query->where('id_reparacion', request('id_reparacion'));
+                }
+
+                $reparacion = $query->with('ordenes')->firstOrFail();
 
                 // Verificar que todos los servicios estén completados
                 if ($reparacion->ordenes->where('estado', 0)->count() > 0) {
@@ -787,7 +804,7 @@ class CatalogosController extends Controller
                     );
                 }
 
-                // Crear el pago
+                // Crear el pago y actualizar el estado de la reparación en una sola transacción
                 $pago = new Pagos([
                     'id_reparacion' => $reparacion->id_reparacion,
                     'fecha' => $validated['fecha'],
@@ -795,7 +812,7 @@ class CatalogosController extends Controller
                 ]);
                 $pago->save();
 
-                // Actualizar el estado de la reparación a Completada
+                // Marcar la reparación como completada
                 $reparacion->update(['estado' => 'Completada']);
             });
 

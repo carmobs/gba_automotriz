@@ -20,13 +20,17 @@
                     <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
                         <option value="">Seleccione un vehículo</option>
                         @foreach($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id_vehiculos }}"
-                                {{ (old('id_vehiculo', request('id_vehiculo')) == $vehiculo->id_vehiculos) ? 'selected' : '' }}>
+                            <option value="{{ $vehiculo->id_vehiculos }}" 
+                                    data-reparacion="{{ $vehiculo->id_reparacion }}"
+                                {{ (old('id_vehiculo', request('id_vehiculo')) == $vehiculo->id_vehiculos && 
+                                   old('id_reparacion', request('id_reparacion')) == $vehiculo->id_reparacion) ? 'selected' : '' }}>
                                 {{ $vehiculo->cliente_nombre }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}
+                                (Reparación #{{ $vehiculo->id_reparacion }})
                             </option>
                         @endforeach
                     </select>
                 </div>
+                <input type="hidden" id="id_reparacion" name="id_reparacion" value="{{ request('id_reparacion') }}">
 
                 <div id="infoReparacion" style="display: none;">
                     <div class="card mb-3">
@@ -81,6 +85,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.getElementById('id_vehiculo').addEventListener('change', function() {
     const vehiculoId = this.value;
+    const reparacionId = this.options[this.selectedIndex].getAttribute('data-reparacion');
+    document.getElementById('id_reparacion').value = reparacionId;
+    
     const infoDiv = document.getElementById('infoReparacion');
     const btnSubmit = document.getElementById('btnSubmit');
     
@@ -89,7 +96,7 @@ document.getElementById('id_vehiculo').addEventListener('change', function() {
         return;
     }
 
-    fetch(`/catalogos/pagos/getReparacionInfo/${vehiculoId}`)
+    fetch(`/catalogos/pagos/getReparacionInfo/${vehiculoId}?id_reparacion=${reparacionId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
