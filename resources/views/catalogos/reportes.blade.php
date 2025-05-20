@@ -40,8 +40,8 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-body text-center">
                     <i class="bi bi-tools text-danger" style="font-size: 3rem;"></i>
-                    <h5 class="card-title mt-3">Reporte de Reparaciones</h5>
-                    <p class="card-text">Genera un reporte de todas las reparaciones realizadas en una fecha específica.</p>
+                    <h5 class="card-title mt-3">Reporte de Ventas</h5>
+                    <p class="card-text">Genera un reporte de todas las ventas realizadas en una fecha específica.</p>
                     <a href="{{ url('/catalogos/reportes/reparaciones') }}" class="btn btn-danger">
                         <i class="bi bi-file-earmark-text"></i> Ver Reporte
                     </a>
