@@ -18,12 +18,17 @@ use App\Models\Citas;
 use App\Models\Puestos;
 use App\Models\Detalle_Puesto;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\RegisterController;
 
 class CatalogosController extends Controller
 {
-    public function home():View
+    public function home(): View|\Illuminate\Http\RedirectResponse
     {
-        return view('home',["breadcrumbs"=>[]]);
+        if (!auth()->check()) {
+            return redirect('/login');
+        }
+        return view('home');
     }
 
     public function clientesGet():View

@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CatalogosController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', [CatalogosController::class, 'home'])->name('home');
 
@@ -109,3 +112,12 @@ Route::prefix('/catalogos/reportes')->group(function () {
     Route::match(['get', 'post'], '/pagos', [CatalogosController::class, 'reportePagos'])->name('reportes.pagos');
     Route::match(['get', 'post'], '/reparaciones', [CatalogosController::class, 'reporteReparaciones'])->name('reportes.reparaciones');
 });
+
+// Autenticación
+Route::get('/login', [\App\Http\Controllers\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [\App\Http\Controllers\LoginController::class, 'login']);
+Route::post('/logout', [\App\Http\Controllers\LoginController::class, 'logout'])->name('logout');
+
+// Registro
+Route::get('/register', [\App\Http\Controllers\RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [\App\Http\Controllers\RegisterController::class, 'register']);

@@ -23,8 +23,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body>
-    @component("components.sidebar")
-    @endcomponent
+    @if(auth()->check())
+        @component("components.sidebar")
+        @endcomponent
+    @endif
     <div class="container mt-4">
         @section("content")
         @show

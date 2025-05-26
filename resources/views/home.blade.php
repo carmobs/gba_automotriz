@@ -34,6 +34,14 @@
             Nuestro equipo de expertos está comprometido con la satisfacción del cliente y la excelencia en cada trabajo.
         </p>
     </div>
+
+    <!-- Botón de cerrar sesión -->
+    <div class="d-flex justify-content-end mt-3 me-3">
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+        </form>
+    </div>
 </div>
 
 <style>
